@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+export const supabase =
+  typeof window === "undefined" ? null : getSupabaseClient();
 
 export function getSupabaseClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
