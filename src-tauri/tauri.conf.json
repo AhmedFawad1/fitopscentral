@@ -1,0 +1,44 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+
+  "productName": "FitopsCentral",
+  "version": "0.1.0",
+  "identifier": "com.fitopscentral.app",
+
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:3000",
+    "frontendDist": "../out"
+  },
+
+  "app": {
+    "windows": [
+      {
+        "title": "FitopsCentral",
+        "width": 1200,
+        "height": 800,
+        "devtools": true,
+        "additionalBrowserArgs": "--enable-features=Camera --use-fake-ui-for-media-stream=false"
+      }
+    ],
+
+    "security": {
+      "csp": null
+    }
+  },
+
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "app", "appimage"],
+    "icon": ["icons/icon.ico"],
+    "resources": ["resources/"]
+  },
+
+  "plugins": {
+    "updater": { "active": false },
+    "shell": {
+      "open": false
+    }
+  }
+}

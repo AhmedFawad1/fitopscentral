@@ -1,26 +1,195 @@
 @import "tailwindcss";
 
+/* ================================
+   DESIGN TOKENS
+================================ */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+  --logo-primary: #02738f;
+  --primary: #02738f;
+  --primary-hover: #0393b4;
+  --border-base: #d1d5db;
+  --border: #e5e7eb;
+  --muted: #6b7280;
+  --logo-primary-dark: #33c2dd;
+  --color-primary: #02738f;
+  --color-primary-hover: #0393b4;
+  --logo-primary: #02738f;
+  --logo-primary-light: #3496bd;
+  --color-border: #cecac4;
+  --sidebar-border: #e2e0db;
+  --sidebar-bg: #0d1117;
+  --sidebar-hover-bg: #3496bd;;
+  --page-bg: #f9fafb;
+  --color-card: #ffffff;
+  /* Backgrounds */
+  --background: #f9fafb;
+  --background-hover: #f3f4f6;
+  --foreground: #111827;
+  --color-bg: #f9fafb;
+  --color-card: #ffffff;
+  --color-text: #111827;
+  --color-text-muted: #8b949e;
+  --svg-light-fill: white;
+  /* Feedback */
+  --color-error: #f85149;
+  --color-success: #238636;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --background: #0d1117;
+  --foreground: #f9fafb;
+  --logo-primary: #33c2dd;
+  --primary: #33c2dd;
+  --primary-hover: #4dd4ee;
+
+  --border: #1f2937;
+  --border-base: #374151;
+  --muted: #9ca3af;
+
+  
+}
+button {
+  cursor: pointer;
+}
+.g1{
+  @apply bg-gradient-to-br from-green-400 to-blue-500
+}
+.g2{
+  @apply bg-[linear-gradient(135deg,_rgb(2,252,2),_rgb(202,235,13))]
+}
+.g3{
+  @apply bg-[linear-gradient(135deg,_rgb(252,248,2),_rgb(235,165,13))]
+}
+.g4{
+  @apply bg-gradient-to-br from-red-600 to-red-800 text-white
+}
+.g5{
+  @apply bg-gradient-to-br from-red-600 to-red-500 text-white
+}
+.g6{
+  @apply bg-gradient-to-br from-red-600 to-orange-500 text-white
+}
+.g8{
+  @apply bg-gradient-to-br from-purple-800 to-purple-500 text-white
+}
+.g9{
+  @apply bg-pink-300
+}
+.g10{
+  @apply bg-blue-300
+}
+.g11{
+  @apply bg-gradient-to-br from-pink-500 to-blue-500
+}
+.g12{
+  @apply bg-gradient-to-br from-red-700 to-red-500 text-white
+}
+.g13{
+  @apply bg-green-500 text-white
+}
+.g14{
+  @apply bg-yellow-500
+}
+.g15{
+  @apply bg-blue-500
+}
+.g16{
+  @apply bg-gradient-to-br from-orange-500 via-orange-500 to-red-500 text-white
+}
+.g17{
+  @apply bg-red-700 text-white
+}
+.g18{
+  @apply border-1 border-green-600 text-green-600
+}
+.g19{
+  @apply border-1 border-red-600 text-red-600
+}
+.g20{
+  @apply border-1 border-green-400 text-green-800
+}
+.g21{
+  @apply border-1 border-green-400 text-green-800
+}
+.g7{
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  border-radius: 50%;
+  justify-content: center;
+  align-items: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.centerhole{
+  position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0; 
+    height: 0; 
+    background-color: white; 
+    border-radius: 50%;
+    transform: translate(-50%,-50%);
+    animation: expandCenterHole 0.7s ease-out forwards;
+    box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.25);
+}
+.gradient-primary {
+  @apply bg-gradient-to-br to-[#04a59d] from-[#025e59];
+}
+.dropshadow-below {
+    box-shadow: 5px 8px 5px #0006;
+}
+.dropshadow-inner {
+    box-shadow: inset -10px 0 25px #0000004a;
+}
+@keyframes bloomIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(20px);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.02) translateY(-4px);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
   }
 }
 
-body {
-  background: var(--background);
+@keyframes bloomOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96) translateY(12px);
+    filter: blur(6px);
+  }
+}
+
+@keyframes expandCenterHole {
+    from {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    to {
+        opacity: 1;
+        width: 80%;
+        height: 80%;
+    }
+}
+html, body {
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+  padding: 0;
 }

@@ -1,0 +1,14 @@
+{
+  "deviceType": "Zekteco",
+  "ip": "192.168.1.201",
+  "port": 4370,
+  "biometricapp": "ZKBridge.exe",
+  "limit": 60,
+  "useArduino": true,
+  "playBirthdaySound": false,
+  "balanceLock": 3,
+  "signInLock": false,
+  "autoResendMessageOnRenewal":true,
+  "sendCopyToAdmin": ["3328266209"],
+  "testmode": true
+}
