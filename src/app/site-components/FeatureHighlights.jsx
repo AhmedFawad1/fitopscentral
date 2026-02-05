@@ -1,5 +1,5 @@
-'use client'
 
+'use client'
 import { motion } from 'framer-motion'
 import {
   Users,
@@ -51,7 +51,7 @@ const features = [
 
 export default function FeatureHighlights() {
   return (
-    <section className="relative py-10 border-t border-[var(--border)] bg-background">
+    <section id='features' className="relative py-10 border-t border-[var(--border)] bg-background">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Heading */}

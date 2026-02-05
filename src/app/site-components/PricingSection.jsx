@@ -78,7 +78,7 @@ const addons = [
 
 export default function PricingSection() {
   return (
-    <section className="relative py-15 border-t border-[var(--border)] bg-background">
+    <section id='pricing' className="relative py-15 border-t border-[var(--border)] bg-background">
       <div className="max-w-7xl mx-auto px-6">
 
         {/* Heading */}

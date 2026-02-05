@@ -1,20 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, use } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Sun, Moon } from 'lucide-react'
 import Logo from './Logo'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 import { useRuntime } from '@/hooks/useRuntime'
 
 const navLinks = [
   { label: 'Home', href: '/' },
-  { label: 'Features', href: '#features' },
-  { label: 'Pricing', href: '#pricing' },
+  { label: 'Features', href: '/#features' },
+  { label: 'Pricing', href: '/#pricing' },
   { label: 'Contact Us', href: '/contact' },
-  { label: 'FAQs', href: '#faqs' },
+  { label: 'FAQs', href: '/#faqs' },
   { label: 'Blogs', href: '#blogs' },
 ]
 const donotShowNavbarPaths = ['/login', '/register', '/app']
@@ -23,9 +23,11 @@ export default function Navbar() {
   const [theme, setTheme] = useState('light')
   const { isTauri, isWeb, isReady } = useRuntime();
   const path = usePathname()
+  const params = useSearchParams()
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
+
   return (
     <motion.header
       initial={{ y: -30, opacity: 0 }}
@@ -60,7 +62,7 @@ export default function Navbar() {
           ))}
 
           <Link
-            href="/login"
+            href="/app"
             className="px-3 py-1 border border-[var(--primary)] hover:bg-[var(--primary)] hover:text-white rounded-md bg-primary  text-sm md:text-base font-semibold hover:bg-primary-hover transition"
           >
             Login

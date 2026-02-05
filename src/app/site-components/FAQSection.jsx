@@ -1,6 +1,4 @@
-'use client'
 
-import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown } from 'lucide-react'
 
@@ -38,70 +36,49 @@ const faqs = [
 ]
 
 export default function FAQSection() {
-  const [openIndex, setOpenIndex] = useState(null)
-
   return (
-    <section className="relative py-10 border-t border-[var(--border)] bg-background">
+    <section id='faqs' className="py-10 border-t bg-background">
       <div className="max-w-4xl mx-auto px-6">
 
         {/* Heading */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold">
             Frequently asked questions 🤔
           </h2>
           <p className="mt-4 text-lg text-muted">
             Everything you need to know before getting started.
           </p>
-        </motion.div>
+        </div>
 
         {/* FAQ Items */}
         <div className="space-y-4">
-          {faqs.map((faq, index) => {
-            const isOpen = openIndex === index
-
-            return (
-              <div
-                key={faq.question}
-                className="rounded-2xl border border-border bg-card"
+          {faqs.map((faq) => (
+            <details
+              key={faq.question}
+              className="group rounded-2xl border bg-card"
+            >
+              <summary
+                className="
+                  cursor-pointer list-none px-6 py-5
+                  flex items-center justify-between
+                  font-medium
+                "
               >
-                <button
-                  onClick={() => setOpenIndex(isOpen ? null : index)}
-                  className="w-full flex items-center justify-between 
-                             px-6 py-5 text-left"
-                >
-                  <span className="font-medium text-foreground">
-                    {faq.question}
-                  </span>
-                  <ChevronDown
-                    className={`transition-transform text-muted
-                      ${isOpen ? 'rotate-180' : ''}`}
-                  />
-                </button>
+                {faq.question}
 
-                <AnimatePresence>
-                  {isOpen && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.25 }}
-                      className="overflow-hidden"
-                    >
-                      <div className="px-6 pb-5 text-sm text-muted leading-relaxed">
-                        {faq.answer}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                <span className="
+                  transition-transform
+                  group-open:rotate-180
+                ">
+                  <ChevronDown size={20} />
+                </span>
+              </summary>
+
+              <div className="px-6 pb-5 text-sm text-muted leading-relaxed">
+                {faq.answer}
               </div>
-            )
-          })}
+            </details>
+          ))}
         </div>
 
       </div>

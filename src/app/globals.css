@@ -173,6 +173,9 @@ button {
     filter: blur(6px);
   }
 }
+#pricing {
+  scroll-margin-top: 80px;
+}
 
 @keyframes expandCenterHole {
     from {
@@ -188,6 +191,7 @@ button {
 }
 html, body {
   background-color: var(--background);
+  scroll-behavior: smooth;
   color: var(--foreground);
   font-family: 'Inter', sans-serif;
   margin: 0;

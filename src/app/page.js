@@ -9,6 +9,7 @@ import PricingSection from './site-components/PricingSection'
 import TrustBuilder from './site-components/TrustBuilder'
 import VideoDemoModal from './site-components/VideoDemoModal'
 import { useRuntime } from '../hooks/useRuntime'
+import HashScrollFix from './site-components/HashScrollFix'
 const features = [
   { title: 'Member Management', desc: 'Admissions, renewals & attendance tracking.' },
   { title: 'Payments & Packages', desc: 'Flexible plans, receipts & balances.' },
@@ -27,6 +28,7 @@ export default function HomePage() {
   return (
     <main className="bg-[var(--background)]">
       {/* HERO */}
+      <HashScrollFix />
       <Hero />
       <TrustBuilder />
       <HowItWorks />
