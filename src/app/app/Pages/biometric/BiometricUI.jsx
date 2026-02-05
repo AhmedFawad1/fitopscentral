@@ -8,7 +8,8 @@ export default function BiometricUI({
     deleteRegistration,
     biometricTemplate,
     saveRegistration,
-    app
+    app,
+    isZkDevice
 }) {
   return (
     <div className='flex flex-col h-full items-center justify-center'>
@@ -32,9 +33,17 @@ export default function BiometricUI({
                 <button onClick={cancelRegistration} className="ml-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
                     Stop Registration
                 </button>:
-                <button onClick={startRegistration} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
-                        Start Registration
-                </button>
+                <div className='flex gap-2'>
+                    <button onClick={startRegistration} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                            Start Registration
+                    </button>
+                     {
+                        isZkDevice && (
+                            <button onClick={deleteRegistration} className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition">
+                                    Delete Registration
+                            </button>)
+                     }
+                </div>
        }
        {
             <div className='flex gap-4 my-5'>

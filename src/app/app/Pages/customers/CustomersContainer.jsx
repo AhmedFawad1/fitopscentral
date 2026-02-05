@@ -11,6 +11,7 @@ import ReceiptContainer from '../Receipts/ReceiptContainer';
 
 export default function CustomersContainer({
     setSelectedCustomer,
+      selectedCustomer,
     setSelectedTab
 }) {
   const user = useSelector(s => s.auth.user);
@@ -33,7 +34,8 @@ export default function CustomersContainer({
     uuid: genUUID,
     dispatch,
     setLocalUpdate,
-    setSuccessModal
+    setSuccessModal,
+    selectedCustomer
   });
   
   return (

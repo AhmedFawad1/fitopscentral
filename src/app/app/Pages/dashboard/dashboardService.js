@@ -23,6 +23,7 @@ export const dashboardService = {
             if (branchId && permissions.canManageBranches) {
                 payload.branchId = branchId;
             }
+            //console.log(`select * from gym_dashboard_view where gym_id = '${gymId}' and ${branchId? `branch_id ='${branchId}'` : 'branch_id IS NULL'}`)
             const result = await invoke('run_sqlite_query', {query: `select * from gym_dashboard_view where gym_id = '${gymId}' and ${branchId? `branch_id ='${branchId}'` : 'branch_id IS NULL'}`});
             return result[0] || null;
         } catch (error) {
@@ -33,7 +34,7 @@ export const dashboardService = {
         const res = await supabase.from('yearly_txn_summary_gym').select('*').order('year', { ascending: false })
         .eq('gym_id', gymId);
         const { data, error } = res;
-        console.log("Fetched yearly summary:", data, error)
+        //console.log("Fetched yearly summary:", data, error)
         ;
         if (error) {
           throw error;
@@ -43,7 +44,7 @@ export const dashboardService = {
     fetchSalesYearlySummarySqllite: async (gymId) => {
         try {
             const result = await invoke('run_sqlite_query', {query: `select * from yearly_txn_summary_gym_local where gym_id = '${gymId}' order by year desc`});
-            console.log("Fetched yearly summary from sqlite:", result);
+            //console.log("Fetched yearly summary from sqlite:", result);
             return result || [];
         } catch (error) {
             throw error;

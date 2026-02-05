@@ -602,7 +602,7 @@ export default function ReceiptUI({
                                 {formValues.receipt.transaction_history.map((txn, index) => (
                                     <div
                                     key={index}
-                                    className="flex items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3"
+                                    className={`flex ${txn.transaction_id? '':'hidden'} items-center justify-between rounded-lg border border-gray-100 bg-gray-50 px-4 py-3`}
                                     >
                                         {/* Left: Info */}
                                         <div className="flex flex-col text-sm text-gray-700">

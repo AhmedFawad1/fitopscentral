@@ -29,6 +29,7 @@ export default function StaffContainer() {
   return (
     <StaffUI
         {...logic}
+        user={user}
         branches={branches}
         singleBranch={user.max_branches === 1}
         permissions={RoleBook[user.role?.toLowerCase()] || {}}

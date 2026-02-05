@@ -58,9 +58,9 @@ export default function Sidebar({open , setOpen, setIsSigningOut, pageView, setP
           }
         });
      }
-     
      dispatch(setLocalUpdate(false))
   }, [selected]);
+  
   useEffect(()=>{
     // Filter nav items based on user role
     if(!user || !appConfig) return;

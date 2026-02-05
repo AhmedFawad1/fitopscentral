@@ -5,7 +5,7 @@ const initialState = {
   user: null,
   localUpdate: true,
   auth_user_id: null,
-  selectedTab: 'new-admission',
+  selectedTab: 'dashboard',
   selectedFilter: null,
   validation: true,
   successModal: {

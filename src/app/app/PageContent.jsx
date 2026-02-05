@@ -31,8 +31,13 @@ import useDataManager from './Services/useDataManager';
 import { useSessionManager } from './useSessionManager';
 import LoginUI from './LoginUI';
 import { sessionServices } from './sessionServices';
+import AttendanceContainer from './Pages/attendance/AttendanceContainer';
+import Attendance from './Pages/attendance/Attendance';
+import BroadcastContainer from './Pages/broadcast/BroadcastContainer';
+import { setShowBroadcastMessage } from '@/store/profileSlice';
 export default function PageContent() {
   const dispatch = useDispatch();
+  
   const {
     user,
     loading,
@@ -59,7 +64,7 @@ export default function PageContent() {
   const showBroadcastMessage = useSelector((state) => state.profile.showBroadcastMessage);
   const [open, setOpen] = useState(false);
   // const logic = useWhatsappManager({ user, whatsappService });
-  const resourcesManager = useResourcesManager({ dispatch, user, resourceServices });
+  const resourcesManager = useResourcesManager({ dispatch, user: user?.gym_id ? user : null, resourceServices });
   
   useEffect(()=>{
     setPageView([{
@@ -103,6 +108,10 @@ export default function PageContent() {
       <SuccessModal />
       <AttendanceUI setSelectedTab={setSelectedTab} setSelectedCustomer={setSelectedCustomer} attendanceCard={resourcesManager.attendanceCard} setAttendanceCard={resourcesManager.setAttendanceCard} />
       {
+        showBroadcastMessage &&
+        <BroadcastContainer onClose={() => dispatch(setShowBroadcastMessage(false))} />
+      }
+      {
         showProgress &&
         <ChartsPage />
       }
@@ -128,11 +137,16 @@ export default function PageContent() {
             />
             <div className="h-full w-full min-w-0 overflow-y-auto overflow-x-hidden">
               {
+                pageView[0]?.key === 'attendance'?
+                <AttendanceContainer 
+                 setSelectedCustomer={resourcesManager.setAttendanceCard}
+                /> :
                 pageView[0]?.key === 'dashboard' ?
                 <DashboardContainer /> :
                 pageView[0]?.key === 'customers' ?
                 <CustomersContainer 
                   setSelectedCustomer={setSelectedCustomer}
+                  selectedCustomer={selectedCustomer}
                   setSelectedTab={setSelectedTab}
                   config={resourcesManager.config}
                 /> :

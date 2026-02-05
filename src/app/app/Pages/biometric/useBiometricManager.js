@@ -115,6 +115,7 @@ export function useBiometricManager({
     startRegistration,
     cancelRegistration,
     deleteRegistration,
-    saveRegistration 
+    saveRegistration,
+    isZkDevice 
   }
 }

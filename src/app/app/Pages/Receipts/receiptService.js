@@ -16,6 +16,7 @@ export const receiptService = {
     },
     fetchReceiptSQL: async (customerID) => {
         const result = await invoke('run_sqlite_query', { query: `SELECT * FROM receipts_view_local WHERE member_id='${customerID}';` });
+        console.log(result)
         return result;
     },
     updateCustomer: async (payload, gymID) => {
@@ -209,8 +210,8 @@ export const receiptService = {
         return { data: membership_data };
     },
     addMembershipSQLite: async (payload) => {
-        const membershipQuery = `INSERT INTO memberships_local (id, gym_id, branch_id, member_id, package_id, trainer_id,total_amount, start_date, due_date, amount_paid, balance, status, created_at, updated_at, is_dirty, receipt_date,cancellation_date, trainer_assigned_on, trainer_expiry, status) VALUES (
-            '${payload.membership.id}','${payload.membership.gym_id}','${payload.membership.branch_id}','${payload.membership.member_id}','${payload.membership.package_id}','${payload.membership.trainer_id}','${payload.membership.total_amount}','${payload.membership.start_date}','${payload.membership.due_date}',${payload.membership.amount_paid},${payload.membership.balance},'${payload.membership.status}','${payload.membership.created_at}','${payload.membership.updated_at}', 1, '${payload.membership.receipt_date}', '${payload.membership.cancellation_date}', '${payload.membership.trainer_assigned_on}', '${payload.membership.trainer_expiry}','completed');`;
+        const membershipQuery = `INSERT INTO memberships_local (id, gym_id, branch_id, member_id, package_id, trainer_id,total_amount, start_date, due_date, amount_paid, balance, status, created_at, updated_at, is_dirty, receipt_date,cancellation_date, trainer_assigned_on, trainer_expiry, status, discount) VALUES (
+            '${payload.membership.id}','${payload.membership.gym_id}','${payload.membership.branch_id}','${payload.membership.member_id}','${payload.membership.package_id}','${payload.membership.trainer_id}','${payload.membership.total_amount}','${payload.membership.start_date}','${payload.membership.due_date}',${payload.membership.amount_paid},${payload.membership.balance},'${payload.membership.status}','${payload.membership.created_at}','${payload.membership.updated_at}', 1, '${payload.membership.receipt_date}', '${payload.membership.cancellation_date}', '${payload.membership.trainer_assigned_on}', '${payload.membership.trainer_expiry}','completed', ${payload.membership.discount});`;
         const transactionQuery = `INSERT INTO transactions_local (id, membership_id, gym_id, branch_id, member_id, amount, txn_type, payment_method, txn_date, updated_at, is_dirty) VALUES (
             '${payload.transaction.id}','${payload.transaction.membership_id}','${payload.transaction.gym_id}','${payload.transaction.branch_id}','${payload.transaction.member_id}',${payload.transaction.amount},'${payload.transaction.txn_type}','${payload.transaction.payment_method}','${payload.transaction.txn_date}','${payload.transaction.updated_at}', 1);`;
         const membershipResult = await invoke('run_sqlite_query', { query: membershipQuery });

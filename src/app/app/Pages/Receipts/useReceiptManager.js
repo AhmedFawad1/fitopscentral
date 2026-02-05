@@ -5,6 +5,7 @@ import { setLocalUpdate } from '@/store/authSlice';
 import { calculateExpiryDate, getTotalAmount, payment_methods, replaceTags } from '@/app/lib/functions';
 import { trainerExpiry } from '../admissions/useAdmissionManager';
 import { whatsappService } from '../whatsapp/whatsappService';
+import { setSendMessage } from '@/store/profileSlice';
 export function useReceiptManager({
   user,
   customer,
@@ -51,7 +52,7 @@ export function useReceiptManager({
         pkg => pkg.id === nextValues.package
       );
       if (!selectedPackage) return nextValues;
-      
+
       const selectedTrainer = trainers.find(
         trn => trn.id === nextValues.trainer_id
       );
@@ -65,7 +66,7 @@ export function useReceiptManager({
         selectedPackage,
         selectedTrainer,
         {
-          ...nextValues,
+          ...nextValues
         }
       );
       if(selectedTrainer && !nextValues.trainer_assigned_on){
@@ -77,7 +78,6 @@ export function useReceiptManager({
         );
       }
       if(selectedTrainer && !nextValues.trainer_fee){
-        
         nextValues.trainer_fee = selectedTrainer.fee || 0;
       }
       return {
@@ -140,8 +140,8 @@ export function useReceiptManager({
     ].filter(Boolean);
 
   const onFieldChange = (field, value) => {
-
     // 🔹 CLEAR FORM
+    
     if (field === 'clearForm') {
       setFormValues({ 
         branch_id: user.branch_id,
@@ -194,9 +194,10 @@ export function useReceiptManager({
       ];
 
       if (packageRelatedFields.includes(field)) {
+   
         nextValues = recalculatePackageValues(nextValues);
+        console.log(nextValues)
       } 
-
       return nextValues;
     });
     setErrors({});
@@ -230,8 +231,8 @@ export function useReceiptManager({
          contact: formValues.contact,
          father_name: formValues.father_name,
          address: formValues.address,
-         dob: formValues.dob,
-         email: formValues.email,
+         dob: formValues.dob || '',
+         email: formValues.email || '',
          admission_date: formValues.admission_date,
          photo_url: formValues.photo_url || customer.photo_url || '',
       };
@@ -282,31 +283,21 @@ export function useReceiptManager({
   const sendBulkMessages = async (message,receipient, adminCopy) => {
        let gymId = user.gym_id;
         let branchId = user.branch_id;
-       let resp =await whatsappService.apiFetch(
-          `/messages/${gymId}/${branchId}/enqueue`,
-          {
-            method: "POST",
-            body: JSON.stringify({
-              to: receipient,
-              body: message
-            })
-          }
-        );
-        console.log('Message send response:', resp);
+       if(receipient && receipient.length > 0){
+          dispatch(setSendMessage({
+            number: receipient,
+            text: message
+          }));
+       }
       let adminMessage = `Copy of message sent to ${receipient}:\n\n${message}`;
       if(sendCopyToAdmin && sendCopyToAdmin.length > 0){
+          // wait for 5 seconds between each admin copy
+          await new Promise(resolve => setTimeout(resolve, 5000));
           for(let adminNumber of sendCopyToAdmin){
-              let resp = await whatsappService.apiFetch(
-                  `/messages/${gymId}/${branchId}/enqueue`,
-                  {
-                    method: "POST",
-                    body: JSON.stringify({
-                      to: adminNumber,
-                      body: adminMessage
-                    })
-                  }
-                );
-              console.log('Admin copy send response:', resp);
+              dispatch(setSendMessage({
+                  number: adminNumber,
+                  text: adminMessage
+              }) );
           }
       }
   }
@@ -416,7 +407,6 @@ export function useReceiptManager({
           amount_paid: '0',
           type: 'renewal'
       });
-      
       if(canSendMessage('Payment Receipt')){
             let template = templates.find(t => t.name === 'Payment Receipt');
             let message = replaceTags(template.content, {...customer, ...membershipPayload, ...transactionPayload, total_amount: customer.total_amount_after_discount},
@@ -460,14 +450,16 @@ export function useReceiptManager({
           due_date: formValues.due_date,
           cancellation_date: formValues.cancellation_date,
           total_amount: formValues.total_amount,
-          amount_paid: formValues.amount_paid,
-          balance: formValues.balance,
-          discount: formValues.discount,
+          amount_paid: parseInt(formValues.amount_paid) || 0,
+          balance: parseInt(formValues.balance) || 0,
+          discount: parseInt(formValues.discount) || 0,
           status: 'active',
           updated_at: new Date().toISOString(),
           trainer_assigned_on: formValues.trainer_assigned_on ? formValues.trainer_assigned_on : null,
-          trainer_expiry: formValues.trainer_expiry ? formValues.trainer_expiry : null
+          trainer_expiry: formValues.trainer_expiry ? formValues.trainer_expiry : ''
     }
+    // console.log('Membership Payload:', membershipPayload);
+    // return
     let transactionPayload = {
         id: uuid(),
         gym_id: user.gym_id,
@@ -487,6 +479,7 @@ export function useReceiptManager({
         membership: membershipPayload,
         transaction: transactionPayload
       });
+    
     if(response.error){
           await confirm(
               'An error occurred while adding the membership. Please try again.',
@@ -507,7 +500,14 @@ export function useReceiptManager({
           due_date: '',
           cancellation_date: '',
       });
-      
+      if(canSendMessage('Payment Receipt')){
+            let template = templates.find(t => t.name === 'Payment Receipt');
+            let message = replaceTags(template.content, {...customer, ...membershipPayload, ...transactionPayload, total_amount: customer.total_amount_after_discount},
+                  packages,
+                  trainers
+            );
+            sendBulkMessages(message, customer.contact, sendCopyToAdmin);
+      }
       dispatch(setLocalUpdate(true));
   }
   const onDeleteTransaction = async(index) => {
@@ -543,6 +543,17 @@ export function useReceiptManager({
           amount_paid: newAmountPaid,
           balance: newBalance
     }
+    if(canSendMessage('Payment Receipt')){
+            let template = templates.find(t => t.name === 'Payment Receipt');
+            let message = `
+            A transaction has been deleted from your membership:
+            Membership ID: ${selectedReceipt.membership_id}
+            Total Amount: ${transactionToDelete.amount}
+            Date: ${transactionToDelete.txn_date}
+            Customer Name: ${customer.name}
+            `
+            sendBulkMessages(message,'' , sendCopyToAdmin);
+      }
     let response = isWeb ? await receiptService.deleteTransaction(transactionToDelete.transaction_id, membershipPayload, user.gym_id) : await receiptService.deleteTransactionSQLite(transactionToDelete.transaction_id, membershipPayload, user.gym_id);
     if(response.error){
           await confirm(
@@ -665,6 +676,16 @@ export function useReceiptManager({
           due_date: '',
           cancellation_date: '',
       });
+      if(canSendMessage('Payment Receipt')){
+            let template = templates.find(t => t.name === 'Payment Receipt');
+            let message = `
+            A membership has been deleted:
+            Membership ID: ${selectedReceipt.membership_id}
+            Customer Name: ${customer.name}
+            Total Amount: ${selectedReceipt.amount_paid}
+            `
+            sendBulkMessages(message,'' , sendCopyToAdmin);
+      }
   }
   const onDeleteProfile = async()=>{
     let ok = await confirm(
@@ -791,7 +812,8 @@ export function useReceiptManager({
         user,
         finalMember,
         finalText,
-        whatsappService
+        whatsappService,  
+        dispatch
       });
       if(sendCopyToAdmin && sendCopyToAdmin.length > 0){
           for(let adminNumber of sendCopyToAdmin){
@@ -800,7 +822,8 @@ export function useReceiptManager({
                   user: {...user, contact: adminNumber},
                   finalMember: {...finalMember, contact: adminNumber},
                   finalText: adminMessage,
-                  whatsappService
+                  whatsappService,
+                  dispatch
               });
           }
       }
@@ -852,24 +875,14 @@ export async function sendWhatsappMessage({
   user,
   finalMember,
   finalText,
-  whatsappService
+  whatsappService,
+  dispatch
 }){
-    let gymId = user?.gym_id;
-    let branchId = user?.branch_id;
-    if (!gymId) return;
-    if (!branchId) return [];
     try {
-      let resp =await whatsappService.apiFetch(
-        `/messages/${gymId}/${branchId}/enqueue`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            to: finalMember.contact,
-            body: finalText
-          })
-        }
-      );
-        console.log("SEND_MESSAGE_RESPONSE", resp);
+      dispatch(setSendMessage({
+                  number: finalMember.contact,
+                  text: finalText
+              }))
     } catch (err) {
       console.error("SEND_MESSAGE_ERROR", err);
     }

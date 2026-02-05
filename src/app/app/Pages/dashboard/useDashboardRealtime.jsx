@@ -21,7 +21,6 @@ export function useDashboardRealtime({
           const data = isWeb
             ? await dashboardService.fetchSupabaseDashboard(gymId, branchId, permissions)
             : await dashboardService.fetchTauriDashboard(gymId, branchId, permissions);
-          console.log('📊 Dashboard data fetched:', data);
           setDashboard(data || null);
       } catch (error) {
         console.error('❌ Error fetching dashboard:', error);

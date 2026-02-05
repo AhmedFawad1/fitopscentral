@@ -4,6 +4,7 @@ import { ProfilePicture } from '../customers/CustomersUI';
 import { genUUID } from '../uuid';
 import { formatDate } from '../expenses/ExpensesUI';
 import { setShowCustomer } from '@/store/profileSlice';
+import { makeFirstLetterUppercase } from '@/app/lib/functions';
 
 const statusColors = {
     Active: 'bg-green-500/20 text-green-600 dark:text-green-400',
@@ -22,7 +23,7 @@ export default function AttendanceUI(
     }
 ) {
   return (
-     attendanceCard &&
+     attendanceCard && attendanceCard.type === 'member'?
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
         <motion.div 
             className="bg-[var(--background)] justify-between flex flex-col p-4 overflow-y-auto relative md:p-5 rounded-lg shadow-lg h-auto md:w-5xl md:h-[540px] w-screen"
@@ -140,9 +141,93 @@ export default function AttendanceUI(
                 </button>
             </div>
         </motion.div>
-    </div>
-        
+    </div> : 
+    attendanceCard && attendanceCard.type === 'staff' ?
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40">
+        <motion.div 
+            className="bg-[var(--background)] justify-between flex flex-col p-4 overflow-y-auto relative md:p-5 rounded-lg shadow-lg h-auto md:w-5xl md:h-[540px] w-screen"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+        >
+            <button
+                onClick={() => setAttendanceCard(null)}
+                className="absolute items-center justify-center flex bg-red-600 h-5 w-5 top-4 right-4 p-1 rounded-full text-white transition"
+            >
+                x
+            </button>
+            <div className="flex items-center gap-5 border-b border-white/10 pb-4">
+                <div
+                    onClick={()=>{setShowEnlargedPhoto(true)}}
+                >
+                    {
+                        showEnlargedPhoto &&
+                        <EnlargedPhoto 
+                            photoUrl={profile?.photo_url} 
+                            onClose={() => {
+                                setTimeout(() => setShowEnlargedPhoto(false), 0);
+                            }}
+
+                        />
+                    }
+                </div>
+                <div>
+                    <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
+                        {attendanceCard?.name || 'Unknown'}
+                    </h2>
+                    <div
+                        className={`inline-flex mb-4 items-center gap-2 px-3 py-1 mt-2 rounded-full text-sm font-medium ${statusColors[attendanceCard?.current_status] || 'bg-gray-500/20 text-gray-500'}`}
+                    >
+                        <span
+                        className={`h-2 w-2 rounded-full ${
+                            attendanceCard?.status === 'active'
+                            ? 'bg-green-400'
+                            : attendanceCard?.status === 'cancelled'
+                            ? 'bg-red-400'
+                            : 'bg-yellow-400'
+                        }`}
+                        />
+                        {makeFirstLetterUppercase(attendanceCard?.status)}
+                    </div>
+                </div>
+            </div>  
+            <div className='px-10'>
+                <div className='grid grid-cols-2 gap-5'>
+                    <div>
+                        <InfoRow label="Staff ID" value={attendanceCard?.serial_number} />
+                        <InfoRow label="Staff Type" value={makeFirstLetterUppercase(attendanceCard?.staff_type)} />
+                        <InfoRow label="Salary Type" value={makeFirstLetterUppercase(attendanceCard?.salary_type)} />
+                        <InfoRow label="Date of Joining" value={attendanceCard.joining_date ?formatDate(attendanceCard.joining_date): '-'} />
+                        <InfoRow label="Contact Number" value={attendanceCard?.contact || ""} />
+                    </div>
+                    <div>
+                        <InfoRow label={`Hours Worked (${getCurrentMonthString()})`} value={attendanceCard?.total_hours_worked.toFixed(2) + " hrs" || '0 hrs'} />
+                        <InfoRow label="Payable" value={formatNumber(attendanceCard?.calculated_salary.toFixed(2))} />
+                    </div>
+                </div>
+            </div>
+            <div className="mt-6 text-right">
+                
+                <button
+                    onClick={() => setAttendanceCard(null)}
+                    className="px-4 py-2 text-sm font-medium !bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow"
+                    >
+                    Close
+                </button>
+            </div>
+        </motion.div>
+    </div>:
+    null   
   )
+}
+
+function getCurrentMonthString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    let  months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    return `${months[now.getMonth()].slice(0,3)}-${year}`;
 }
 
 function EnlargedPhoto({ photoUrl, onClose }) {

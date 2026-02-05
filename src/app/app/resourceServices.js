@@ -1,6 +1,23 @@
 import { supabase } from "@/app/lib/createClient";
 import { invoke } from "@tauri-apps/api/core";
 
+async function addColumnIfMissing(table, column, definition) {
+  const columns = await invoke('run_sqlite_query', {
+    query: `PRAGMA table_info(${table});`
+  });
+
+  const exists = columns.some(c => c.name === column);
+
+  if (!exists) {
+    console.log(`➕ Adding column ${column} to ${table}`);
+    await invoke('run_sqlite_query', {
+      query: `ALTER TABLE ${table} ADD COLUMN ${column} ${definition};`
+    });
+  } else {
+    //console.log(`⏭️ Column ${column} already exists on ${table}`);
+  }
+}
+
 export const resourceServices = {
     fetchDataSQLite: async(gym_id, branch_id) => {
         let packages = await invoke('run_sqlite_query', { query: `SELECT * FROM packages_local WHERE deleted = 0 AND gym_id = '${gym_id}' AND branch_id = '${branch_id}' ORDER BY name ASC` });
@@ -107,11 +124,16 @@ export const resourceServices = {
           if(!data || data.length === 0){
             query =`SELECT * FROM staff_local WHERE gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and serial_number='${id}' AND deleted IS NOT TRUE;`;
             data = await invoke('run_sqlite_query', { query: query });
+            console.log(data)
             if(data && data.length > 0){
                 let staff = data[0];
                 staff.type = 'staff';
+                 let payroll = await invoke('run_sqlite_query', { query: `SELECT * FROM payroll_view_local WHERE gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and staff_id='${staff.id}';` });
+                 staff = { ...staff, ...payroll[0] };
+                 staff['status'] = staff['status'] === '' ? 'active' : staff['status'];
                 return staff;
             }
+           
           }
             return null;
     },
@@ -123,6 +145,7 @@ export const resourceServices = {
     },
     openGate: async(useArduino, status)=>{
          if(!useArduino || status !== 'Active') return;
+         console.log("Invoking Arduino to open gate...");
          invoke("send_to_arduino")
          .then((res)=>{
             console.log("Gate opened via Arduino:", res);
@@ -153,6 +176,73 @@ export const resourceServices = {
             checkOutTime: `${formatTimestamp().split(' ')[1]}`,
             staffId: id
         });
+    },
+    
+    alterChanges: async (migrationSQL, version) => {
+        // 1️⃣ Ensure migrations table exists
+        await addColumnIfMissing(
+        'MEMBERSHIPS_LOCAL',
+        'created_at',
+        "DATETIME DEFAULT (datetime('now'))"
+        );
+
+        await addColumnIfMissing(
+        'MEMBERSHIPS_LOCAL',
+        'trainer_start',
+        'DATE'
+        );
+
+        await invoke('run_sqlite_query', {
+            query: `
+            CREATE TABLE IF NOT EXISTS migrations_version (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                version INTEGER NOT NULL
+            );
+            `
+        });
+
+        // 2️⃣ Read last applied version
+        const result = await invoke('run_sqlite_query', {
+            query: `SELECT version FROM migrations_version WHERE id = 1;`
+        });
+
+        const lastVersion =  result?.[0]?.version || 0;
+        // 3️⃣ Skip if migration already applied
+        if (lastVersion >= version) {
+            //console.log(`🟡 Migration skipped (current: ${lastVersion}, incoming: ${version})`);
+            return;
+        }
+
+        //console.log(`🚀 Running migration v${version}...`);
+        // 4️⃣ Run migration SQL (single fixed string)
+        let migrate = migrationSQL.forEach(element => {
+            try{
+                invoke('run_sqlite_query', { query: element });
+            }catch(err){
+                console.log(`Error executing migration step: ${element}`, err);
+            }
+        });
+        // 5️⃣ Update version table (UPSERT style)
+        await invoke('run_sqlite_query', {
+            query: `
+            INSERT INTO migrations_version (id, version)
+            VALUES (1, ${version})
+            ON CONFLICT(id) DO UPDATE SET version = ${version};
+            `
+        });
+
+        //console.log(`✅ Migration v${version} applied successfully`);
+    },
+    fetchStatus: async(gymId, branchId) =>{
+        let data = await invoke('run_sqlite_query',{
+            query: `select current_status,serial_number from member_view_local where gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and current_status IS NOT NULL AND deleted IS NOT TRUE;`
+        })
+        let staff = await invoke('run_sqlite_query',{
+            query: `select status, serial_number from staff_local where gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and status IS NOT NULL AND deleted IS NOT TRUE;`
+        });   
+        data = data.concat(staff);
+        //console.log("Fetched Status Data:", data);
+        return data;
     }
 }
 

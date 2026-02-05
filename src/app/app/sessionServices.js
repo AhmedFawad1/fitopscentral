@@ -17,17 +17,18 @@ export const sessionServices = {
     getSupabaseUser: async (isTauri) => {
         let connected = await checkInternetConnection();
         const userString = localStorage.getItem('supabaseUser');
+
         if(isTauri && !connected){
-            console.log("Running in Tauri or offline mode, fetching user from local storage.");
+            //console.log("Running in Tauri or offline mode, fetching user from local storage.");
             
             if(!userString) return null;
             const user = JSON.parse(userString);
             return user;
         }
         
-        console.log(JSON.parse(userString))
+        //console.log(JSON.parse(userString))
         const { data: { user } } = await supabase.auth.getUser();
-        console.log("Supabase auth user:", user);
+        //console.log("Supabase auth user:", user);
         if(!user)  return null;
         if(user){
             let { data, error } = await supabaseEdge("license-verification", {
@@ -39,7 +40,7 @@ export const sessionServices = {
             if(isTauri){
                 localStorage.setItem('supabaseUser', JSON.stringify({...user, ...data}));
             }
-            //console.log("License verification response:", data, error);
+            ////console.log("License verification response:", data, error);
             return {...user, ...data};
         }
         return user;
@@ -49,6 +50,7 @@ export const sessionServices = {
         localStorage.removeItem('supabaseUser');
         return { error };
     }
+
 }
 
 

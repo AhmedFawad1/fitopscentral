@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRuntime } from '@/hooks/useRuntime';
 import { useSelector } from 'react-redux';
+import { invoke } from '@tauri-apps/api/core';
 
 export function useExpenseManager({
   user,
@@ -13,6 +14,8 @@ export function useExpenseManager({
   setShowOverlay
 }) {
   const { isTauri, isWeb, isReady } = useRuntime();
+
+  const [registerBiometric, setRegisterBiometric] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [errors, setErrors] = useState({});
   const firstDateOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 2).toISOString().split('T')[0];
@@ -36,6 +39,22 @@ export function useExpenseManager({
     fetchExpenses();
   }, [formValues.branch_id, isReady]);
   
+  useEffect(()=>{
+      if(!formValues.serial_number) return;
+      async function start() {
+              await invoke("zk_add_user", { id: formValues.serial_number.toString(), name: formValues.name });
+      }
+      async function stop() {
+              await invoke("zk_stop_enrollment", { id: formValues.serial_number.toString() });
+      }       
+      if(registerBiometric && status === 'connected'){
+          // invoke biometric registration
+          start();
+      }else if(!registerBiometric && status === 'connected'){
+          // stop biometric registration
+          stop();
+      }
+  },[registerBiometric])
   const onFieldChange = (field, value) => {
     if(field === 'clearForm'){
         setFormValues({
@@ -179,6 +198,7 @@ export function useExpenseManager({
     onExpenseSelect,
     onSubmit,
     onSearch,
-    onDelete
+    onDelete,
+    registerBiometric
   };
 }

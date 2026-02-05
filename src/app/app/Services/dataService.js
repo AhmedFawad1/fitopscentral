@@ -145,6 +145,12 @@ async function synchroniser(tableName, user) {
       if (tableName === 'members') {
         console.log("🧪 Upserting member:", r);
       }
+      if(r.updated_by == null){
+        delete r.updated_by;
+      }
+      if (r.trainer_id === "null") {
+        r.trainer_id = null;
+      }
 
       const { error } = await supabase
         .from(tableName)
@@ -158,8 +164,9 @@ async function synchroniser(tableName, user) {
       console.log(`✅ Synced ${tableName} → ${r.id}`);
 
     } catch (err) {
-      console.error(
-        `❌ Failed to sync ${tableName} record ${record.id}`,
+      console.log(record)
+      console.log(
+        `❌ Failed to sync ${tableName} record ${record}`,
         {
           code: err.code,
           message: err.message,

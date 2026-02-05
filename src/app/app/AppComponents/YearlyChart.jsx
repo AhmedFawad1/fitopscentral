@@ -13,7 +13,6 @@ export default function YearlyChart({ title, data1, data2, total, label1, label2
   const [hoverInfo, setHoverInfo] = useState(null);
 
   useEffect(() => {
-    console.log(total)
     if (Array.isArray(total)) {
       const highest = Math.max(...total);
       setMaxValue(highest);

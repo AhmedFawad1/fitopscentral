@@ -31,6 +31,11 @@ export const navItems = {
     smallIcon: <LayoutDashboard className="text-white" size={20} />,
     state: 'dashboard'
   },
+  'Attendance':{
+    smallIcon: <User className="text-white" size={20} />,
+    state: 'attendance',
+    largeIcon: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-[22px] w-[22px] text-[var(--primary)] group-hover:text-[var(--primary)] transition duration-300"><path fill-rule="evenodd" d="M12 3.75a6.715 6.715 0 0 0-3.722 1.118.75.75 0 1 1-.828-1.25 8.25 8.25 0 0 1 12.8 6.883c0 3.014-.574 5.897-1.62 8.543a.75.75 0 0 1-1.395-.551A21.69 21.69 0 0 0 18.75 10.5 6.75 6.75 0 0 0 12 3.75ZM6.157 5.739a.75.75 0 0 1 .21 1.04A6.715 6.715 0 0 0 5.25 10.5c0 1.613-.463 3.12-1.265 4.393a.75.75 0 0 1-1.27-.8A6.715 6.715 0 0 0 3.75 10.5c0-1.68.503-3.246 1.367-4.55a.75.75 0 0 1 1.04-.211ZM12 7.5a3 3 0 0 0-3 3c0 3.1-1.176 5.927-3.105 8.056a.75.75 0 1 1-1.112-1.008A10.459 10.459 0 0 0 7.5 10.5a4.5 4.5 0 1 1 9 0c0 .547-.022 1.09-.067 1.626a.75.75 0 0 1-1.495-.123c.041-.495.062-.996.062-1.503a3 3 0 0 0-3-3Zm0 2.25a.75.75 0 0 1 .75.75c0 3.908-1.424 7.485-3.781 10.238a.75.75 0 0 1-1.14-.975A14.19 14.19 0 0 0 11.25 10.5a.75.75 0 0 1 .75-.75Zm3.239 5.183a.75.75 0 0 1 .515.927 19.417 19.417 0 0 1-2.585 5.544.75.75 0 0 1-1.243-.84 17.915 17.915 0 0 0 2.386-5.116.75.75 0 0 1 .927-.515Z" clip-rule="evenodd"></path></svg>`
+  },
   'New Admission':{
     smallIcon: <User className="text-white" size={20} />,
     state: 'new-admission',
@@ -86,15 +91,16 @@ export const getTotalAmount = (selectedPackage, selectedTrainer, form) => {
         totalAmount += form.trainer_fee ? parseInt(form.trainer_fee || selectedTrainer.fee) : selectedTrainer.fee;
     }
     if(selectedPackage){
+        
         if(form.admission_fee){
             totalAmount += selectedPackage.admission_fee;
         }
         if(form.package_fee){
             totalAmount += selectedPackage.price;
         }
-        if(form.type === 'renewal'){
+        if(form.type === 'renewal' || form.txn_type === 'renewal'){
             totalAmount += selectedPackage.price;
-        }else if(form.type === 'admission'){
+        }else if(form.type === 'admission' || form.txn_type === 'admission'){
             totalAmount += selectedPackage.price + selectedPackage.admission_fee;
         }
     }
@@ -103,7 +109,7 @@ export const getTotalAmount = (selectedPackage, selectedTrainer, form) => {
         balance: (totalAmount - (form.amount_paid || 0) - (form.discount || 0))
     };
 }
-export const noNavbarPaths = ['/login', '/signup','/forgot-password','/reset-email-sent','/reset-password','/app'];
+export const noNavbarPaths = ['/login', '/signup','/forgot-password','/reset-email-sent','/reset-password','/app','/app/','/app/login','/app/signup'];
 
 export function genUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -175,6 +181,7 @@ export const replaceTags = (text, member, packages, trainers
       // console.log(member)
       let selectedPackage = packages.find(pkg => pkg.id === member.package_id);
       let selectedTrainer = trainers.find(tr => tr.id === member.trainer_id);
+      
       text = text
         .replace("{Name}", member.name || "")
         .replace("{contact}", member.contact || "")
@@ -188,7 +195,7 @@ export const replaceTags = (text, member, packages, trainers
         .replace("{Due Date}", member.due_date ? parseDate(member.due_date) : "N/A")
         .replace("{Cancellation Date}", member.cancellation_date ? parseDate(member.cancellation_date) : "N/A")
         .replace("{Cancellation}", member.cancellation_date ? parseDate(member.cancellation_date) : "N/A")
-        .replace("{Total Amount}", member.total_amount || 0)
+        .replace("{Total Amount}", resolveTotalAmount(member) || 0)
         .replace("{Amount Paid}", member.amount_paid || 0)
         .replace("{Balance}", member.balance || 0)
         .replace("{Discount}", member.discount || 0)
@@ -204,6 +211,26 @@ export const replaceTags = (text, member, packages, trainers
         }
         return finalText;
     }
+
+const resolveTotalAmount = (member) => {
+  let total = 0;
+  if(member.total_amount){
+    return member.total_amount;
+  }
+  else{
+     total = confirmInteger(member.balance) + confirmInteger(member.amount_paid) + confirmInteger(member.discount);
+      return total;
+  }
+}
+const confirmInteger = (value) => {
+  if(!value) return 0;
+  if(typeof value === 'string'){
+    if(value.trim() === '') return 0;
+    if(isNaN(value)) return 0;  
+    return parseInt(value);
+  }
+  return value;
+}
 const parseDate = (dateStr) => {
   // from "2023-10-01" to 01 Oct 2023
   if (!dateStr) return "N/A";

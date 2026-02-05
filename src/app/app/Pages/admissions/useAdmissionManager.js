@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { calculateExpiryDate, getTotalAmount, payment_methods, replaceTags } from '@/app/lib/functions';
 import { genUUID } from '../uuid';
 import { send } from 'node:process';
+import { setSendMessage } from '@/store/profileSlice';
 
 const initialFormValues = {
   admission_date: new Date().toISOString().split('T')[0],
@@ -180,31 +181,30 @@ export function useAdmissionManager({
   const sendBulkMessages = async (message,receipient, adminCopy) => {
          let gymId = user.gym_id;
          let branchId = user.branch_id;
-         let resp =await whatsappService.apiFetch(
-            `/messages/${gymId}/${branchId}/enqueue`,
-            {
-              method: "POST",
-              body: JSON.stringify({
-                to: receipient,
-                body: message
-              })
-            }
-          );
-          console.log('Message send response:', resp);
+        //  let resp =await whatsappService.apiFetch(
+        //     `/messages/${gymId}/${branchId}/enqueue`,
+        //     {
+        //       method: "POST",
+        //       body: JSON.stringify({
+        //         to: receipient,
+        //         body: message
+        //       })
+        //     }
+        //   );
+        //   console.log('Message send response:', resp);
+        dispatch(setSendMessage({
+            number: receipient,
+            text: message
+        }))
+        // wait for 5 seconds before sending admin copy
+        await new Promise((res) => setTimeout(res, 5000));
         let adminMessage = `Copy of message sent to ${receipient}:\n\n${message}`;
         if(sendCopyToAdmin && sendCopyToAdmin.length > 0){
             for(let adminNumber of sendCopyToAdmin){
-                let resp = await whatsappService.apiFetch(
-                    `/messages/${gymId}/${branchId}/enqueue`,
-                    {
-                      method: "POST",
-                      body: JSON.stringify({
-                        to: adminNumber,
-                        body: adminMessage
-                      })
-                    }
-                  );
-                console.log('Admin copy send response:', resp);
+                dispatch(setSendMessage({
+                    number: adminNumber,
+                    text: adminMessage
+                }))
             }
         }
     }
@@ -225,10 +225,8 @@ export function useAdmissionManager({
       }
 
       if (!(await confirm(
-        formValues.id ? 'Do you want to update this expense?' :
-        'Do you want to save changes to this expense?', 
-        formValues.id ? 'Update Expense' :
-        'Save Expense',
+        'Are you sure you want to add new admission?',
+        'Save Admission',
         'Confirm',
         true,
         'Save'
@@ -260,25 +258,26 @@ export function useAdmissionManager({
         start_date: formValues.start_date,
         due_date: formValues.due_date || null,
         cancellation_date: formValues.cancellation_date || null,
-        total_amount: formValues.total_amount || 0,
-        amount_paid: formValues.amount_paid || 0,
-        balance: formValues.balance || 0,
+        total_amount: parseInt(formValues?.total_amount || 0),
+        amount_paid: parseInt(formValues?.amount_paid || 0 ),
+        balance: parseInt(formValues?.balance || 0) || 0,
         payment_methods: formValues.payment_method,
         updated_at: new Date().toISOString(),
-        discount: formValues.discount || 0,
+        discount: parseInt(formValues?.discount || 0) || 0,
         txn_date_today: formValues.txn_date_today || false,
         admission_fee: formValues.admission_fee || false,
         package_fee: formValues.package_fee || false,
-        photo_url: formValues.photo_url || ''
+        photo_url: formValues.photo_url || '',
+        email: formValues.email || ''
       };
-      //sendWhatsappMessage(payload);
+      sendWhatsappMessage(payload);
       console.log(payload)
       // return
       let data= isWeb ? await admissionService.save(payload) : await admissionService.saveSQLite(payload);
       if(data?.error){
         console.log("Error saving admission: ", data.error);
         await confirm(
-          'An error occurred while saving the admission. Please try again.',
+          `Error saving admission: ${data.error}`,
           'Error',
           'Error',
           false,

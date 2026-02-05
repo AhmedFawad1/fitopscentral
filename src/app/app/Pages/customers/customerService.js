@@ -211,6 +211,7 @@ export const customerService = {
         let data = [];
         let error = null;
         let query = '';
+        console.log('Selected filter:', selectedFilter);
         switch (selectedFilter){
                 case 'total members':
                     query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
@@ -231,16 +232,16 @@ export const customerService = {
                     query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%m', dob)='${month.toString().padStart(2, '0')}' AND strftime('%d', dob)='${day.toString().padStart(2, '0')}' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
                     break;
                 case 'admissions':  
-                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now') AND first_transaction_type='admission' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
+                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now','localtime') AND first_transaction_type='admission' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
                     break;
                 case 'renewals':
-                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now') AND first_transaction_type='renewal' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
+                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now','localtime') AND first_transaction_type='renewal' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
                     break;
                 case 'total collections':
-                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now') AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
+                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now','localtime') AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
                     break;
                 case 'balance':
-                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now') AND balance > 0 AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
+                    query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' ${branchId ? `AND branch_id='${branchId}'` : ''} AND strftime('%Y-%m', last_transaction_date)=strftime('%Y-%m', 'now','localtime') AND balance > 0 AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;
                     break;
                 case 'admissions today':
                     query = `SELECT * FROM member_view_local WHERE gym_id='${gymId}' AND date(last_transaction_date)=date('now','localtime') AND first_transaction_type='admission' AND deleted IS NOT TRUE ORDER BY serial_number ASC LIMIT ${limit} OFFSET ${offset};`;

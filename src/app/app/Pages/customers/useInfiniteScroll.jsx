@@ -46,26 +46,27 @@ export default function useInfiniteScroll({
         const prevScrollTop = containerRef.current.scrollTop;
   
         fetchFn(offset)
-            .then((data) => {
-                if (!data || data.length === 0) {
-                    setHasMore(false);
-                }
-                setItems(prev => {
-                    return [...prev, ...data];
-                });
-
-                requestAnimationFrame(() => {
-                    setTimeout(() => {
-                        if (containerRef.current) {
-                            containerRef.current.scrollTop = prevScrollTop;
-                        }
-                        setIsLoading(false);
-                    }, 30);
-                });
-            })
-            .catch((error) => {
-                setIsLoading(false)
+        .then((data) => {
+            if (!data || data.length === 0) {
+                setHasMore(false);
+            }
+            setItems(prev => {
+                return [...prev, ...data];
             });
+
+            requestAnimationFrame(() => {
+                setTimeout(() => {
+                    if (containerRef.current) {
+                        containerRef.current.scrollTop = prevScrollTop;
+                    }
+                    setIsLoading(false);
+                }, 30);
+            });
+        })
+        .catch((error) => {
+            setIsLoading(false)
+        });
+
     }, [offset, disabled, hasMore, localUpdate, selectedFilter, isReady, refresh]);
     useEffect(() => {   
         const getUpdatedMemberView = async () => {
@@ -79,7 +80,9 @@ export default function useInfiniteScroll({
             console.log('Fetched updated member view:', data, selected);
             setItems(data ? data.data? data.data : data : []);
         }
+        console.log('Local update detected:', localUpdate, selected);
         if(localUpdate && selected){
+            
             getUpdatedMemberView()
         }
     }, [localUpdate]);

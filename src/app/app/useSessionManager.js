@@ -30,7 +30,7 @@ export function useSessionManager(){
             return;
         }
         const { data, error } = await sessionServices.login(email, password);
-        console.log("Login response:", data, error);
+        //console.log("Login response:", data, error);
         if (error) {
             setError(error.message);
             setSigningIn(false);
@@ -58,7 +58,7 @@ export function useSessionManager(){
             setCheckingSession(true);
             setSigningIn(false);
             const { data, error } = await sessionServices.sessionExists();
-            console.log("Session check response:", data, error);
+            //console.log("Session check response:", data, error);
             if (data?.session) {
                 setSessionExists(true);
                 setUserData(data.session.user);
@@ -76,7 +76,7 @@ export function useSessionManager(){
         if(user.gym_id) return;
         const fetchUserData = async () => {
             const userData = await sessionServices.getSupabaseUser(isTauri);
-            console.log("Fetched user data:", userData);
+            //console.log("Fetched user data:", userData);
             if(userData){
                 if(checkExpired(userData.end_date)){
                     setLicenseError("Your license has expired. Please contact support.");

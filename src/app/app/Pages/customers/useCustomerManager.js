@@ -188,8 +188,10 @@ export function useCustomerManager({
     });
   
   },[isReady])
+
   useEffect(() => {
     if(!isReady) return;
+    console.log("Selected Customer Changed:", selectedCustomer);
     const handleKey = (e) => {
         if (e.code === "Escape") {
             if (modalRef.current || userRef.current) {

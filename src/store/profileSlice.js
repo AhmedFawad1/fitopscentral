@@ -91,7 +91,7 @@ const profileSlice = createSlice({
             state.showCustomer = action.payload;
         },
         setRealDeviceEvents: (state, action) => {
-            console.log("Adding real device events to store...", action.payload);
+            //console.log("Adding real device events to store...", action.payload);
 
             state.realDeviceEvents = [
                 action.payload,

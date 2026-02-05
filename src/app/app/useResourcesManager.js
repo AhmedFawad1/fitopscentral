@@ -4,13 +4,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
-
+import { mig } from "../lib/migrations";
 export function useResourcesManager({
     dispatch,
     user,
     resourceServices
 }) {
   // Placeholder for resource management logic
+  const [memberStatus, setMemberStatus] = useState(null);
   const logs = useSelector((state) => state.profile.eventLogs);
   const mode = useSelector((state) => state.profile.mode);
   const [packages, setPackages] = useState([]);
@@ -41,11 +42,13 @@ export function useResourcesManager({
     
     if (!evt) return;
     lastUpdateRef.current = Date.now();
+    //console.log("Device Event Received:", evt);
     // attendance logs
     if(App ==='ZKBridge.exe'){
-      console.log("Handling ZK Event:", evt.type);
+      //console.log("Handling ZK Event:", evt.type);
       if (evt.type === "attendance") {
-        //console.log("Attendance event:", evt.data);
+        ////console.log("Attendance event:", evt.data);
+        
         handleAttendanceEvent(evt.data.enroll);
         pushLog(`Scan Record: UserID ${evt.data.enroll}, Time ${evt.data.ts}`);
         return
@@ -94,34 +97,43 @@ export function useResourcesManager({
             pushLog(`Device Error: ${evt.data}`);
             break;
           default:
-            console.log("Unhandled Secugen Event:", evt);
+            //console.log("Unhandled Secugen Event:", evt);
             break;
         }
     }
   }
 
+  async function fetchMemberStatus(){
+     let data = await resourceServices.fetchStatus(gymId, branchId);
+
+     let dataObj = data.reduce((acc, curr) => {
+        acc[curr.serial_number] = curr.current_status || curr.status;
+        return acc;
+     }, {});
+     setMemberStatus(dataObj);
+  }
   async function restartService() {
         if(!App) return;
         if(App ==='ZKBridge.exe') {
             try {
                 await resourceServices.restartZKService(Ip, Port);
-                console.log("ZK Service restarted and connected");
+                //console.log("ZK Service restarted and connected");
             } catch (error) {
-                console.log("Error restarting ZK Service:", error);
+                //console.log("Error restarting ZK Service:", error);
             }
         }else{
              try {   
                  await resourceServices.restartSecugenService(mode);
-                 console.log("Secugen Service restarted");
+                 //console.log("Secugen Service restarted");
              } catch (error) {
-                 console.log("Error restarting Secugen Service:", error);
+                 //console.log("Error restarting Secugen Service:", error);
              }
         }
   }
 
   async function initSecugenListener() {
     if (secugenListenerAttachedRef.current) {
-      console.log("SecuGen listener already attached — skipping");
+      //console.log("SecuGen listener already attached — skipping");
       return;
     }
 
@@ -163,11 +175,11 @@ export function useResourcesManager({
                   dispatch(setRealDeviceEvents(event.payload));
               }).then((fn) => (unlisten = fn));
             }else{
-              console.log("Initializing Secugen Listener...");
+              //console.log("Initializing Secugen Listener...");
                await initSecugenListener();
             }
         } catch (error) {
-          console.log("Failed to listen to zk_event:", error);
+          //console.log("Failed to listen to zk_event:", error);
         }
 
         return () => {
@@ -192,7 +204,7 @@ export function useResourcesManager({
               dispatch(setRealDeviceEvents(event.payload));
             }).then((fn) => (unlisten = fn));
           } catch (error) {
-            console.log("Failed to listen to zk_event:", error);
+            //console.log("Failed to listen to zk_event:", error);
           }
 
           return () => {
@@ -205,9 +217,12 @@ export function useResourcesManager({
   }
 
   async function handleAttendanceEvent(id) {
-      //console.log("Handling Attendance for ID:", id);
+      ////console.log("Handling Attendance for ID:", id);
+      
+      resourceServices.openGate(config.useArduino, memberStatus ? memberStatus[parseInt(id)] : 'Active');
       let data = await resourceServices.getProfile(gymId, branchId, id);
-      //console.log("Fetched Profile Data:", data);
+    
+      ////console.log("Fetched Profile Data:", data);
       if(data){
          if(data.type === 'member'){
             data.membership_history = typeof data.membership_history === 'string' ? JSON.parse(data.membership_history) : data.membership_history;  
@@ -216,7 +231,6 @@ export function useResourcesManager({
                data.current_status = 'balance_due';
             }
             resourceServices.playSound(data.current_status);
-            resourceServices.openGate(config.useArduino, data.current_status);
             resourceServices.markAttendance(gymId, branchId, data.serial_number, data.current_status);
          }else{
             if(data.is_active){
@@ -226,6 +240,7 @@ export function useResourcesManager({
             }
          }
          console.log("Attendance Data:", data);
+         
          setAttendanceCard(data);
       }
   }
@@ -239,9 +254,11 @@ export function useResourcesManager({
         setPackages(packages);
         setTrainers(trainers);
         setTemplates(templates);
+        await resourceServices.alterChanges(mig.migrate, mig.version)
     }
     if(!user || isWeb ) return;
     fetchConfig();
+    fetchMemberStatus()
   },[user]);
 
   useEffect(() => {
@@ -254,7 +271,7 @@ export function useResourcesManager({
 
   useEffect(() => {
     if (config?.biometricapp !== 'SecuGenDemo.exe' || !isReady || !isTauri || !user) return;
-
+    
     initSecugenListener();
 
     const timer = setInterval(() => {

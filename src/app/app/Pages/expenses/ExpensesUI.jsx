@@ -282,6 +282,8 @@ export const formatDate = (date)=>{
     // expect date in dd-Nov-yyyy
     // test date first
     if(!date) return '';
+    // if invalid date return N/A
+    if(isNaN(new Date(date).getTime())) return 'N/A';
     let months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     let d = new Date(date);
     let day = String(d.getDate()).padStart(2, '0');

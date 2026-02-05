@@ -4,6 +4,7 @@ import InputField from '../../AppComponents/subcomponents/InputField';
 import ContactInput from '../../AppComponents/subcomponents/ContactInput';
 import { motion } from 'framer-motion';
 export default function StaffUI({
+  user,  
   formValues,
   errors,
   staff,
@@ -13,17 +14,53 @@ export default function StaffUI({
   onFieldChange,
   onStaffSelect,
   onSubmit,
-  onDelete
+  onDelete,
+  registerBiometric,
+  setRegisterBiometric,
+  showModal,
+  setShowModal,
+  status,
+  deviceMessage,
+  isTauri
 }) {
-  useEffect(() => {
-    console.log(staff)
-  }, [staff])
   return (
     <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1, transition: { duration: 0.8 } }}
         exit={{ opacity: 0 }}
         className='h-screen p-8 overflow-y-auto'>
+        <div className={`fixed ${showModal?'block':'hidden'} inset-0 bg-black/50 flex items-center justify-center z-30`}>
+            <div className={`flex flex-col py-3 relative  w-1/2 bg-[var(--background)] justify-center items-center ${formValues.id? '':'hidden'} space-x-10`}>
+                <h1 className='font-bold text-xl'>Staff Biometric Registration</h1>
+                <div className='flex w-full gap-3 justify-center items-center p-6'>
+                    <button
+                        className={`w-1/5 mt-4 py-1 px-2  ${status==='connected'?'block':'hidden'} rounded-md text-white ${registerBiometric ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                        onClick={() => setRegisterBiometric(!registerBiometric)}
+                    >
+                        {
+                            `${registerBiometric? 'Stop' : 'Start'}`
+                        }
+                    </button>   
+                    <button
+                        className={`w-1/5 ${registerBiometric ? 'hidden' : 'block'} mt-4 py-1 px-2 rounded-md text-white bg-red-600 hover:bg-red-700`}
+                        onClick={() => {
+                            invoke("zk_delete_user", { id: formValues.serial_number.toString() });
+                        }}
+                    >
+                        {
+                            `Delete`
+                        }
+                    </button> 
+                </div> 
+                
+                <div>{deviceMessage}</div>
+                <button className='absolute flex justify-center items-center top-2 right-2 h-6 w-6 rounded-full text-white bg-red-700'
+                onClick={() => setShowModal(false)}
+                >
+                    x
+                </button>
+            </div>
+        </div>
         <h1 className='text-2xl font-bold mb-2 text-center'>Staff Management</h1>
         <div className='my-2'>
         {
@@ -216,6 +253,14 @@ export default function StaffUI({
         >
             {formValues.selectedStaff ? 'Update Staff' : 'Add Staff'}
         </button>
+        {
+            formValues.id && user.payroll_management && isTauri &&
+            <button className='px-4 py-2 ml-3 bg-blue-600 text-white rounded-md'
+                onClick={()=>{setShowModal(true)}}
+            >
+                Add/Remove Biometric
+            </button>
+        }
     </motion.div>
   )
 }

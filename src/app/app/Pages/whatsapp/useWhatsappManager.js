@@ -1,242 +1,97 @@
-
-import { setSuccessModal } from "@/store/authSlice";
-import { setEngineStatus, setToast } from "@/store/profileSlice";
+import { setEngineStatus, setSendMessage, setToast } from "@/store/profileSlice";
 import { useEffect, useRef, useState } from "react";
-import QRCode from 'qrcode';
-export function useWhatsappManager({ 
-  user, 
-  whatsappService, 
+import QRCode from "qrcode";
+import { useSelector } from "react-redux";
+
+export function useWhatsappManager({
+  user,
+  whatsappService,
   confirm,
-  dispatch
+  dispatch,
 }) {
-  const [state, setState] = useState("idle"); // backend state
-  const [qr, setQr] = useState(null);
-  const [initializing, setInitializing] = useState(true);
-  const [obj, setObj] = useState(null);
-  const [ready, setReady] = useState(false);
-  const pollRef = useRef(null);
-  const connectingRef = useRef(false);
-  const wsRef = useRef(null);
-  const [selectedMessage, setSelectedMessage] = useState(null);
+  const sendMsg = useSelector((s) => s.profile.sendMessage);
   const enabled = !!user && user.tier >= 8;
-  const gymId = user?.gym_id;
-  const branchId = user?.branch_id;
-  /* ------------------ fetch history ------------------ */
-  const [sendingMessage, setSendingMessage] = useState(true);
-  const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState(null);
 
+  const wsRef = useRef(null);
+  const connectingRef = useRef(false);
+  const prevSnapshotRef = useRef(null);
 
-  const fetchHistory = async () => {
-    
-  }
-  /* ------------------ send message ------------------ */
-  const sendMessage = async (number, text) => {
-    if (!gymId) return;
-    if (!branchId) return [];
-    setSendingMessage(true);
-    try {
-      wsRef.current.send(
-          JSON.stringify({
-            type: 'send',
-            number: number,
-            text: text,
-          })
-        );
-    } catch (err) {
-      console.error("SEND_MESSAGE_ERROR", err);
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+  // 🔥 SINGLE SOURCE OF TRUTH (frontend)
+  const [session, setSession] = useState(null);
 
-  const resendMessage = async (message) => {
-    if (!gymId) return;
-    if (!branchId) return [];
-    setSendingMessage(true);
-    try {
-      // let resp =await whatsappService.apiFetch(
-      //   `/messages/${gymId}/${branchId}/${message.id}/retry`,
-      //   {
-      //     method: "POST"
-      //   }
-      // );
-        console.log("RESEND_MESSAGE_RESPONSE", resp);
-        
-    }
-    catch (err) {
-      // console.log(confirm)
-       await confirm(
-         `An error occurred while retrying the message: ${err}`,
-         'Retry Message',
-        'Error',
-        false,
-        'OK'
-       )
-    } finally {
-      setSendingMessage(false);
-    }
-  };
+  // UI helpers
+  const [qr, setQr] = useState(null);
+  const [sendingMessage, setSendingMessage] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState(null);
 
+  /* -------------------------------------------------
+   * WebSocket Connection
+   * ------------------------------------------------- */
   const connectWS = () => {
     if (wsRef.current) return;
 
     const connect = () => {
-      const ws = new WebSocket('ws://localhost:8810');
+      const ws = new WebSocket("ws://localhost:8810");
 
       ws.onopen = () => {
         wsRef.current = ws;
-        setState('CONNECTED');
       };
 
       ws.onmessage = async (event) => {
         const msg = JSON.parse(event.data);
-        if(msg.ready === true || msg.ready === false){
-            setReady(msg.ready);
-        }
-        if(msg.queueSize !== undefined){
-            setObj(msg);
-        }
+
         switch (msg.type) {
-          case 'qr': {
+          // 🔥 AUTHORITATIVE STATE
+          case "SESSION_SNAPSHOT": {
+            setSession(msg);
+
+            // QR handling
+            if (msg.qrAvailable && !qr) {
+              // QR comes separately as `qr` event
+            }
+            if (!msg.qrAvailable) {
+              setQr(null);
+            }
+
+            // -------- transition-based UX ----------
+            const prev = prevSnapshotRef.current;
+
+            if (prev) {
+              if (prev.internetUp && !msg.internetUp) {
+                dispatch(setToast({
+                  type: "error",
+                  message: "Internet lost. Messages will be queued 📦",
+                }));
+                dispatch(setEngineStatus("Internet Disconnected 🌑"));
+              }
+
+              if (!prev.ready && msg.ready) {
+                dispatch(setEngineStatus("WhatsApp Connected 🟢"));
+              }
+
+              if (!prev.reconnecting && msg.reconnecting) {
+                dispatch(setEngineStatus("Reconnecting WhatsApp… ♻️"));
+              }
+            }
+
+            prevSnapshotRef.current = msg;
+            break;
+          }
+
+          // 🔹 Legacy QR payload
+          case "qr": {
             const dataURL = await QRCode.toDataURL(msg.qr);
-            setState('AUTH_REQUIRED');
             setQr(dataURL);
             break;
           }
-          case 'ready':
-            setQr(null);
-            setState('READY');
+
+          // 🔹 Message lifecycle (events, NOT truth)
+          case "sent":
+            dispatch(setToast({ type: "success", message: "Message sent ✅" }));
             break;
 
-          case 'internet':
-              if (!msg.up) {
-                dispatch(setToast({
-                  type: 'error',
-                  message: 'Internet connection lost. Messages will be queued 📦'
-                }));
-                console.log(msg)
-                dispatch(setEngineStatus('Internet Disconnected 🌑'));
-              } else {
-                dispatch(setToast({
-                  type: 'success',
-                  message: 'Internet restored. Sending queued messages 🚀'
-                }));
-                dispatch(setEngineStatus('Internet Connected 🌐'));
-
-                // auto-clear success toast after a bit
-                setTimeout(() => dispatch(clearToast()), 3000);
-              }
-          break;
-
-
-          case 'health':
-            if(msg.phase === 'NEED_QR'){
-               setState('AUTH_REQUIRED');
-            } else if(msg.phase === 'READY'){
-               setState('READY');
-            }else if(msg.phase === 'CONNECTED'){
-                setState('CONNECTED');
-            }
-            if(!msg.internetUp){
-              dispatch(setToast({
-                type: 'error',
-                message: 'Internet connection lost. Messages will be queued 📦'
-              }));
-              dispatch(setEngineStatus('Internet Disconnected 🌑'));
-            }else if(!msg.ready){
-               dispatch(setToast({
-                type: 'error',
-                message: 'WhatsApp is not ready. Messages will not be sent'
-              }));
-              dispatch(setEngineStatus('WhatsApp Not Ready ❌'));
-            }else if(msg.ready && msg.internetUp){
-              // dispatch(setToast({
-              //   type: 'success',
-              //   message: 'WhatsApp is ready and internet is up. Messages will be sent 🚀'
-              // }));
-            }
-            break;
-
-          case 'queued':
-            setState('Message queued 📦');
-            break;
-
-          case 'sent':
-            setState('Message sent ✅');
-            break;
-
-          case 'send_retry':
-            setState(`Retrying message (${msg.attempts})…`);
-            break;
-
-          case 'send_failed':
-            setState('Message failed ❌');
-            break;
-
-          // ----------------------------
-          // ENGINE / RESTART LIFECYCLE
-          // ----------------------------
-          case 'reconnecting':
-            dispatch(setEngineStatus('Reconnecting WhatsApp… ♻️'));
-            dispatch(setToast({
-              type: 'warning',
-              message: 'WhatsApp reconnecting… ♻️'
-            }));
-            break;
-
-          case 'status':
-            if (msg.message === 'engine_restart') {
-              dispatch(setEngineStatus('Restarting WhatsApp Engine 🔄'));
-              dispatch(setToast({
-                type: 'warning',
-                message: 'Engine restarting to recover 🛠️'
-              }));
-            }
-            break;
-
-          // ----------------------------
-          // 🧠 ENGINE METRICS (NEW)
-          // ----------------------------
-          case 'engine_metrics': {
-            const {
-              restartsTotal,
-              lastRestartAt,
-              restartReasons,
-              lastSuccessfulSendAt
-            } = msg;
-
-            // Optional: store in redux if you have a slice
-            // dispatch(setEngineMetrics(msg));
-
-            // 🚨 Detect instability
-            if (restartsTotal >= 3) {
-              dispatch(setToast({
-                type: 'warning',
-                message: `Engine restarted ${restartsTotal} times ⚠️ Possible instability`
-              }));
-            }
-
-            // 🟢 Reassurance UX
-            if (lastSuccessfulSendAt) {
-              dispatch(setEngineStatus('Engine healthy 🟢 Messages flowing'));
-            }
-            break;
-          }
-
-          // ----------------------------
-          // SHUTDOWN
-          // ----------------------------
-          case 'shutdown':
-            dispatch(setEngineStatus('Engine stopped 🧯'));
-            dispatch(setToast({
-              type: 'error',
-              message: 'WhatsApp Engine stopped 🧯'
-            }));
-
-          case 'shutdown':
-            dispatch(setEngineStatus('Engine stopped 🧯'));
+          case "send_failed":
+            dispatch(setToast({ type: "error", message: "Message failed ❌" }));
             break;
 
           default:
@@ -254,43 +109,87 @@ export function useWhatsappManager({
 
     connect();
   };
-  /* ------------------ session lifecycle ------------------ */
 
+  /* -------------------------------------------------
+   * Engine Startup
+   * ------------------------------------------------- */
   useEffect(() => {
     if (!enabled || connectingRef.current) return;
 
     connectingRef.current = true;
-    setState('INITIALIZING');
-    try{
-      whatsappService.startEngine().then(() => setTimeout(connectWS, 800)).catch((err) => {
-        console.error(err);
+
+    whatsappService
+      .startEngine()
+      .then(() => setTimeout(connectWS, 800))
+      .catch(() => {
         connectingRef.current = false;
-        setState('FAILURE');
       });
-    }catch(err){
-      console.log(err);
-       setState('FAILURE');
-    }
   }, [enabled]);
 
-  /* ------------------ derived flags ------------------ */
+  useEffect(() => {
+    if (sendMsg) {
+      // Handle send message action from the store
+      // For example, you can call sendMessage here
+      sendMessage(sendMsg.number, sendMsg.text);
+
+      // Clear the sendMessage action in the store after handling
+      dispatch(setSendMessage(null));
+    }
+  }, [sendMsg]);
+  /* -------------------------------------------------
+   * Actions
+   * ------------------------------------------------- */
+  const sendMessage = async (number, text) => {
+    if (!wsRef.current) return;
+
+    setSendingMessage(true);
+    try {
+      wsRef.current.send(
+        JSON.stringify({
+          type: "send",
+          number,
+          text,
+        })
+      );
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
+  /* -------------------------------------------------
+   * Derived UI State (NO GUESSING)
+   * ------------------------------------------------- */
+  const uiState = (() => {
+    if (!enabled) return "disabled";
+    if (!session) return "INITIALIZING";
+
+    switch (session.enginePhase) {
+      case "NEED_QR":
+        return "AUTH_REQUIRED";
+      case "READY":
+        return "READY";
+      case "RECONNECTING":
+        return "RECONNECTING";
+      case "ERROR":
+        return "ERROR";
+      default:
+        return "INITIALIZING";
+    }
+  })();
+
   return {
-    state, // raw backend state
+    // 🔥 expose session, not guesses
+    session,
+    state: uiState,
+
     qr,
-    isConnected: state === "CONNECTED" || state === "READY",
-    isAwaitingQr: state === "AUTH_REQUIRED",
-    isInitializing: state === "INITIALIZING",
-    disabled: !enabled,
+    ready: session?.ready === true,
+    obj: session, // temporary compatibility
+
     sendMessage,
-    fetchHistory,
-    history,
-    loadingHistory,
-    historyError,
+    sendingMessage,
+
     selectedMessage,
     setSelectedMessage,
-    sendingMessage,
-    resendMessage,
-    ready,
-    obj
   };
 }

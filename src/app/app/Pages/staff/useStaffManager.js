@@ -1,5 +1,7 @@
 import { useRuntime } from "@/hooks/useRuntime";
+import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 
 export function useStaffManager({
     user,
@@ -10,11 +12,17 @@ export function useStaffManager({
     setLocalUpdate,
     setSuccessModal
 }) {
+    const [registerBiometric, setRegisterBiometric] = useState(false);
+    const logs = useSelector((state) => state.profile.eventLogs);
     const [staff, setStaff] = useState([]);
     const [errors, setErrors] = useState({});
     const [formValues, setFormValues] = useState({
         branch_id: user.branch_id
     });
+    const [showModal, setShowModal] = useState(false);
+    const status = useSelector((state) => state.profile.deviceStatus);
+    const [deviceMessage, setDeviceMessage] = useState('');
+
     const [serial_number, setSerialNumber] = useState(1);
     const { isTauri, isWeb, isReady } = useRuntime();
     const fetchStaff = async () => {
@@ -40,6 +48,83 @@ export function useStaffManager({
             setFormValues({ branch_id: formValues.branch_id, serial_number: serial_number });//reset to initial state except branch and serial number
         }
     }, [formValues.selectedStaff]);
+
+    useEffect(()=>{
+        if(!isTauri) return;
+        // example log
+
+        if (logs.length === 0) return;
+
+        const raw = logs[0][0];
+        if(!raw || typeof raw !== 'string') return;
+        // Extract the JSON object from the log line
+        const jsonMatch = raw.match(/\{.*\}$/);
+
+        if (!jsonMatch) {
+            console.log("No JSON found in log", raw);
+            return;
+        }
+
+        const jsonString = jsonMatch[0];
+
+        let parsed;
+        try {
+            parsed = JSON.parse(jsonString);
+        } catch (err) {
+            console.error("JSON parsing failed:", err);
+            return;
+        }
+
+
+        let typeMessage = parsed.type;
+
+        switch(typeMessage){
+            // Add cases here as needed
+            case 'enroll_start':
+                setDeviceMessage('🟢 Biometric enrollment started.');
+                break;  
+            case 'enroll_stop':
+                //setDeviceMessage('🔴 Biometric enrollment stopped.');
+                break;  
+            case 'delete_user':
+                setDeviceMessage('🗑️ Biometric data deleted.');
+                break;
+            case 'enroll_done':
+                setDeviceMessage('✅ Biometric enrollment completed successfully.');
+                setRegisterBiometric(false);
+                break;
+            case 'error':
+                if(status === 'connected' && parsed.data && parsed.data.message){
+                    if(parsed.data.message === 'DeleteUser failed'){
+                        setDeviceMessage(`❌ Failed to delete biometric data for ${customer.data.serial_number}. User may not exist on device.`);
+                    }else if(parsed.data.message === 'StartEnroll failed'){
+                        setDeviceMessage('❌ Failed to start biometric enrollment. User May already be enrolled.');
+                        setRegisterBiometric(false);
+                    }
+                }
+                break;
+            default:    
+                break;
+        }
+    },[logs])
+
+    useEffect(()=>{
+        if(!formValues.serial_number) return;
+        async function start() {
+                await invoke("zk_add_user", { id: formValues.serial_number.toString(), name: formValues.name });
+        }
+        async function stop() {
+                await invoke("zk_stop_enrollment", { id: formValues.serial_number.toString() });
+        }       
+        if(registerBiometric && status === 'connected'){
+            // invoke biometric registration
+            start();
+        }else if(!registerBiometric && status === 'connected'){
+            // stop biometric registration
+            stop();
+        }
+    },[registerBiometric])
+
     const staffValidation = () =>{
         const errors = {};
         if (!formValues.name || formValues.name.trim() === '') {
@@ -160,6 +245,9 @@ export function useStaffManager({
         fetchStaff();
     }
 
+    const deleteBiometric = async () => {
+        await invoke("zk_delete_user", { id: formValues.serial_number.toString() });
+    }
     return {
         staff,
         errors,
@@ -168,6 +256,14 @@ export function useStaffManager({
         onStaffSelect,
         staffValidation,
         onSubmit,
-        onDelete
+        onDelete,
+        showModal,
+        setShowModal,
+        status,
+        deviceMessage,
+        isTauri,
+        deleteBiometric,
+        setRegisterBiometric,
+        registerBiometric
     };
 }

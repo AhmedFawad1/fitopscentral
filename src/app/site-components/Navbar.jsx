@@ -7,6 +7,7 @@ import { Menu, X, Sun, Moon } from 'lucide-react'
 import Logo from './Logo'
 import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
+import { useRuntime } from '@/hooks/useRuntime'
 
 const navLinks = [
   { label: 'Home', href: '/' },
@@ -16,9 +17,11 @@ const navLinks = [
   { label: 'FAQs', href: '#faqs' },
   { label: 'Blogs', href: '#blogs' },
 ]
+const donotShowNavbarPaths = ['/login', '/register', '/app']
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [theme, setTheme] = useState('light')
+  const { isTauri, isWeb, isReady } = useRuntime();
   const path = usePathname()
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
