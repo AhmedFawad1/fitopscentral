@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Menu, X, Sun, Moon } from 'lucide-react'
 import Logo from './Logo'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 import { useRuntime } from '@/hooks/useRuntime'
 
@@ -23,7 +23,6 @@ export default function Navbar() {
   const [theme, setTheme] = useState('light')
   const { isTauri, isWeb, isReady } = useRuntime();
   const path = usePathname()
-  const params = useSearchParams()
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
   }, [theme])
