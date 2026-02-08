@@ -1,5 +1,5 @@
 import { useRuntime } from "@/hooks/useRuntime";
-import { addAttendanceLog, addEventLog, setAttendanceID, setBiometricTemplate, setDeviceStatus, setRealDeviceEvents, setTauriConfig, setUpsertAttendance } from "@/store/profileSlice";
+import { addAttendanceLog, addEventLog, setAttendanceID, setAutoClosure, setBiometricTemplate, setDeviceStatus, setRealDeviceEvents, setTauriConfig, setUpsertAttendance } from "@/store/profileSlice";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
@@ -239,9 +239,8 @@ export function useResourcesManager({
                 resourceServices.markStaffAttendance(gymId, branchId, data.id);
             }
          }
-         console.log("Attendance Data:", data);
-         
          setAttendanceCard(data);
+         dispatch(setAutoClosure(true));
       }
   }
   

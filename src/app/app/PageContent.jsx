@@ -34,7 +34,7 @@ import { sessionServices } from './sessionServices';
 import AttendanceContainer from './Pages/attendance/AttendanceContainer';
 import Attendance from './Pages/attendance/Attendance';
 import BroadcastContainer from './Pages/broadcast/BroadcastContainer';
-import { setShowBroadcastMessage } from '@/store/profileSlice';
+import { setAutoClosure, setShowBroadcastMessage } from '@/store/profileSlice';
 export default function PageContent() {
   const dispatch = useDispatch();
   
@@ -63,6 +63,7 @@ export default function PageContent() {
   const showProgress = useSelector((state) => state.profile.showProgress);
   const showBroadcastMessage = useSelector((state) => state.profile.showBroadcastMessage);
   const [open, setOpen] = useState(false);
+  const autoClosure = useSelector((state) => state.profile.autoClosure);
   // const logic = useWhatsappManager({ user, whatsappService });
   const resourcesManager = useResourcesManager({ dispatch, user: user?.gym_id ? user : null, resourceServices });
   
@@ -73,6 +74,16 @@ export default function PageContent() {
     }])
   },[selected])
   
+  useEffect(()=>{
+    if(autoClosure){
+      const timer = setTimeout(() => {
+        resourcesManager.setAttendanceCard(null);
+        dispatch(setAutoClosure(false));
+      }, 5 * 1000);
+      return () => clearTimeout(timer);
+    }
+  },[autoClosure])
+
   return checkingSession?
   (<Loading />):
   !user?

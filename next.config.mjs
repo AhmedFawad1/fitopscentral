@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
+const isTauri = process.env.BUILD_TARGET === 'tauri';
 const nextConfig = {
-  // output: "export",
+  output: isTauri ? 'export' : undefined,
   images: { unoptimized: true },
   trailingSlash: true,
   reactStrictMode: false

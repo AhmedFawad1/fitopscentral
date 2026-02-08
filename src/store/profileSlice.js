@@ -21,6 +21,7 @@ const initialState = {
     showBroadcastMessage: false,
     showCustomer: null,
     realDeviceEvents: [],
+    autoClosure: false
 };
 const profileSlice = createSlice({
     name: 'profile',
@@ -97,11 +98,13 @@ const profileSlice = createSlice({
                 action.payload,
                 ...state.realDeviceEvents
             ].slice(0, 100);
+        },
+        setAutoClosure: (state, action) => {
+            state.autoClosure = action.payload;
         }
-
 
     },
 });
 
-export const { setDeviceStatus, addAttendanceLog, addEventLog, setAttendanceID, setUpsertAttendance, setShowProgress, setTauriConfig, setBiometricTemplate, setMode, setTestMode, setEngineStatus, setQrImage, setSendMessage, setSelectedStaff, setToast, clearToast, setShowBroadcastMessage, setShowCustomer, setRealDeviceEvents } = profileSlice.actions;
+export const { setDeviceStatus, addAttendanceLog, addEventLog, setAttendanceID, setUpsertAttendance, setShowProgress, setTauriConfig, setBiometricTemplate, setMode, setTestMode, setEngineStatus, setQrImage, setSendMessage, setSelectedStaff, setToast, clearToast, setShowBroadcastMessage, setShowCustomer, setRealDeviceEvents, setAutoClosure } = profileSlice.actions;
 export default profileSlice.reducer;

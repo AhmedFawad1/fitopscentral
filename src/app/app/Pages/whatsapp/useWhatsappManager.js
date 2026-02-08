@@ -193,3 +193,42 @@ export function useWhatsappManager({
     setSelectedMessage,
   };
 }
+
+
+export function normalizePK(contact) {
+  if (!contact) return null;
+
+  // 1. Remove all non-digit characters except leading +
+  contact = contact.toString().trim();
+  contact = contact.replace(/\s+/g, "");         // remove spaces
+  contact = contact.replace(/[()-]/g, "");       // remove formatting symbols
+
+  // 2. Convert +92 → 92
+  if (contact.startsWith("+")) {
+    contact = contact.slice(1);
+  }
+
+  // 3. Convert 0092 → 92
+  if (contact.startsWith("0092")) {
+    contact = contact.replace(/^0092/, "92");
+  }
+
+  // 4. Convert 92xxxxxxxxxx → keep as is
+  if (contact.startsWith("92")) {
+    return contact;
+  }
+
+  // 5. Convert 03xxxxxxxxx → remove leading 0 then prepend 92
+  if (contact.startsWith("0")) {
+    contact = contact.replace(/^0+/, ""); // remove all leading zeros
+    return "92" + contact;
+  }
+
+  // 6. Convert 3xxxxxxxxx → prepend 92
+  if (/^[1-9]\d{8,10}$/.test(contact)) {
+    return "92" + contact;
+  }
+
+  // 7. Anything else is invalid
+  return null;
+}

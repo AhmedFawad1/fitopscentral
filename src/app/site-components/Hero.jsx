@@ -28,7 +28,7 @@ export default function Hero() {
 
           {/* Heading */}
           <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold text-foreground leading-tight">
-            Run your gymsssss <span className="text-primary">smarterrr</span>,  
+            Run your gyms <span className="text-primary">smarter</span>,  
             <br />
             not harder 💪
           </h1>

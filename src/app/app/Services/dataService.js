@@ -12,6 +12,7 @@ export const dataService = {
    syncFromSupabase: async (user)=>{
         let connected = await checkInternetConnection()
         if(!connected) return;
+        await checkGyms(user)
         for (const tableName of TABLE_SYNC_ORDER) {
             let query = `SELECT last_synced_at from sync_log where table_name='${tableName}';`;
             const data = await invoke("run_sqlite_query", { query });
@@ -32,7 +33,6 @@ export const dataService = {
                     console.error(`Error fetching ${tableName} from Supabase:`, error);
                     continue;
                 }
-                console.log(`🔄 Syncing ${supaData.length} records from ${tableName}...`);
                 supaData.forEach(async (record) => {
                     try {
                         await updateData({
@@ -74,6 +74,88 @@ const TABLE_SYNC_ORDER = [
   'transactions',
 ];
 
+async function checkGyms(user){
+   let query = `SELECT * from gyms_local where id='${user.gym_id}';`;
+   let data = await invoke("run_sqlite_query", { query });
+   if(data.length === 0){
+      // fetch from supabase
+      let { data: gymData, error } = await supabase
+        .from('gyms')
+        .select('*')
+        .eq('id', user.gym_id)
+        .limit(1)
+        .single();
+      if(error){
+         console.error("Error fetching gym data:", error);
+         return;
+      }
+      // insert into local
+      let insertQuery = `INSERT INTO gyms_local (id, name,owner_user_id, contact, email, updated_at) VALUES (
+         '${gymData.id}',
+         '${gymData.name}',
+         '${gymData.owner_user_id || ''}',
+         '${gymData.contact || ''}',
+         '${gymData.email || ''}',
+         '${gymData.updated_at}'
+      );`;
+      await invoke("run_sqlite_query", { query: insertQuery });
+      // get
+   }
+   // check branches
+    query = `SELECT * from branches_local where id='${user.branch_id}';`;
+    data = await invoke("run_sqlite_query", { query });
+    if(data.length === 0){
+      // fetch from supabase
+      let { data: branchData, error } = await supabase
+        .from('branches')
+        .select('*')
+        .eq('id', user.branch_id)
+        .limit(1)
+        .single();
+      if(error){
+         console.error("Error fetching branch data:", error);
+         return;
+      }
+      // insert into local
+      let insertQuery = `INSERT INTO branches_local (id, gym_id, name,code, address, updated_at) VALUES (
+         '${branchData.id}',
+         '${branchData.gym_id}',
+          '${branchData.name}',
+          '${branchData.code || ''}',
+          '${branchData.address || ''}',
+         '${branchData.updated_at}'
+      );`;
+      await invoke("run_sqlite_query", { query: insertQuery });
+   }
+   // check users
+   query = `SELECT * from users_local where user_id='${user.user_id}';`;
+   data = await invoke("run_sqlite_query", { query });
+    if(data.length === 0){
+      // fetch from supabase
+      let { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .limit(1)
+        .single();
+      if(error){
+          console.error("Error fetching user data:", error);
+          return;
+      }
+      // insert into local
+      let insertQuery = `INSERT INTO users_local (id, user_id, gym_id, branch_id, email, name, role, updated_at) VALUES (
+         '${userData.id}',
+         '${userData.id}',
+         '${userData.gym_id}',
+          '${userData.branch_id}',
+          '${userData.email}',
+          '${userData.name || ''}',
+          '${userData.role}',
+          '${userData.updated_at}'
+      );`;
+      await invoke("run_sqlite_query", { query: insertQuery });
+   }
+}
 async function synchroniser(tableName, user) {
   const query = `
     SELECT *
@@ -267,16 +349,17 @@ async function updateData({
                     contact='${record.contact}',
                     father_name='${record.father_name|| ''}',
                     address='${record.address || ''}',
-                    dob='${record.dob}',
-                    email='${record.email}',
+                    dob='${record.dob|| ''}',
+                    email='${record.email || ''}',
                     admission_date='${record.admission_date}',
                     updated_at='${new Date().toISOString()}',
-                    photo_url='${record.photo_url || ''}'
+                    photo_url='${record.photo_url || ''}',
+                    gender='${record.gender || ''}'
                     WHERE id='${record.id}' AND gym_id='${record.gym_id}';`;
                 return await invoke('run_sqlite_query', { query });
             } else {
                 // insert
-                let query = `INSERT INTO members_local (id, serial_number, gym_id, branch_id, name, BLOCKED, contact, father_name, address, dob, email, admission_date, created_at, updated_at, is_dirty) VALUES (
+                let query = `INSERT INTO members_local (id, serial_number, gym_id, branch_id, name, BLOCKED, contact, father_name, address, dob, email, admission_date, updated_at, is_dirty, gender) VALUES (
                     '${record.id}',
                     ${record.serial_number},
                     '${record.gym_id}',
@@ -289,9 +372,9 @@ async function updateData({
                     '${record.dob || ''}',
                     '${record.email || ''}',
                     '${record.admission_date || ''}',
-                    '${record.created_at || new Date().toISOString()}',
                     '${record.updated_at || new Date().toISOString()}',
-                    0
+                    0,
+                    '${record.gender || ''}'
                 );`;
                 return await invoke('run_sqlite_query', { query });
             }
@@ -309,13 +392,13 @@ async function updateData({
                     updated_at='${new Date().toISOString()}',
                     balance=${record.balance},
                     package_id='${record.package_id}',
-                    trainer_id='${record.trainer_id}'
-
+                    trainer_id='${record.trainer_id}',
+                    status='${record.status || 'active'}'
                     WHERE id='${record.id}' AND gym_id='${record.gym_id}';`;
                 return await invoke('run_sqlite_query', { query });
             } else {
                 // insert
-                let query = `INSERT INTO memberships_local (id, gym_id, branch_id, member_id, package_id, trainer_id, receipt_date, start_date, due_date, cancellation_date, total_amount, amount_paid, discount, created_at, updated_at, is_dirty) VALUES (
+                let query = `INSERT INTO memberships_local (id, gym_id, branch_id, member_id, package_id, trainer_id, receipt_date, start_date, due_date, cancellation_date, total_amount, amount_paid, discount, updated_at, is_dirty, status) VALUES (
                     '${record.id}',
                     '${record.gym_id}',
                     '${record.branch_id}',
@@ -329,9 +412,9 @@ async function updateData({
                     ${record.total_amount || 0},
                     ${record.amount_paid || 0},
                     ${record.discount || 0},
-                    '${record.created_at || new Date().toISOString()}',
                     '${record.updated_at || new Date().toISOString()}',
-                    0
+                    0,
+                    '${record.status || 'active'}'
                 );`;
                 return await invoke('run_sqlite_query', { query });
             }
@@ -346,12 +429,13 @@ async function updateData({
                     txn_type='${record.txn_type}',
                     membership_id='${record.membership_id}',
                     member_id='${record.member_id}',
-                    updated_at='${new Date().toISOString()}'
+                    updated_at='${new Date().toISOString()}',
+                    status='${record.status || 'completed'}'
                     WHERE id='${record.id}' AND gym_id='${record.gym_id}';`;
                 return await invoke('run_sqlite_query', { query });
             }else{
                 // insert
-                let query = `INSERT INTO transactions_local (id, gym_id, branch_id, membership_id, member_id, amount, payment_method, txn_date, txn_type, created_at, updated_at, is_dirty) VALUES (
+                let query = `INSERT INTO transactions_local (id, gym_id, branch_id, membership_id, member_id, amount, payment_method, txn_date, txn_type, updated_at, is_dirty, status) VALUES (
                     '${record.id}',
                     '${record.gym_id}',
                     '${record.branch_id}',
@@ -361,9 +445,9 @@ async function updateData({
                     '${record.payment_method}',
                     '${record.txn_date}',
                     '${record.txn_type}',
-                    '${record.created_at || new Date().toISOString()}',
                     '${record.updated_at || new Date().toISOString()}',
-                    0
+                    0,
+                    '${record.status || 'completed'}'
                 );`;
                 return await invoke('run_sqlite_query', { query });
             }

@@ -6,6 +6,7 @@ import { calculateExpiryDate, getTotalAmount, payment_methods, replaceTags } fro
 import { trainerExpiry } from '../admissions/useAdmissionManager';
 import { whatsappService } from '../whatsapp/whatsappService';
 import { setSendMessage } from '@/store/profileSlice';
+import { normalizePK } from '../whatsapp/useWhatsappManager';
 export function useReceiptManager({
   user,
   customer,
@@ -817,10 +818,10 @@ export function useReceiptManager({
       });
       if(sendCopyToAdmin && sendCopyToAdmin.length > 0){
           for(let adminNumber of sendCopyToAdmin){
-              let adminMessage = `Copy of message sent to ${finalMember.contact}:\n\n${finalText}`;
+              let adminMessage = `Copy of message sent to ${normalizePK(adminNumber)}:\n\n${finalText}`;
               await sendWhatsappMessage({
-                  user: {...user, contact: adminNumber},
-                  finalMember: {...finalMember, contact: adminNumber},
+                  user: {...user, contact: normalizePK(adminNumber)},
+                  finalMember: {...finalMember, contact: normalizePK(adminNumber)},
                   finalText: adminMessage,
                   whatsappService,
                   dispatch
@@ -830,7 +831,9 @@ export function useReceiptManager({
       dispatch(setSuccessModal({ message: 'Message sent successfully & will be queued.', visible: true }));
     }else{
        // create a whatsapp web link
-       let whatsappLink = `https://wa.me/${finalMember.contact.replace(/\D/g,'')}?text=${encodeURIComponent(finalText)}`;
+       let contactNumber = finalMember.contact.replace(/\D/g,'');
+       contactNumber = normalizePK(contactNumber);
+       let whatsappLink = `https://web.whatsapp.com/send?phone=${contactNumber}&text=${encodeURIComponent(finalText)}`;
        resourceServices.openExternalLink(whatsappLink);
     }
   }
