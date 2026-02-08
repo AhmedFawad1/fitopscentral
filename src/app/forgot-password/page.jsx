@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
         return;
     }
     const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `https://fitopscentral.com/reset-password`,
     })
 
     setLoading(false)
