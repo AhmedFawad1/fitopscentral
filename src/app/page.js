@@ -11,7 +11,7 @@ import VideoDemoModal from './site-components/VideoDemoModal'
 import { useRuntime } from '../hooks/useRuntime'
 import HashScrollFix from './site-components/HashScrollFix'
 import { useEffect } from 'react'
-import { useRouter } from 'next/router'
+import { useRouter } from 'next/navigation'
 const features = [
   { title: 'Member Management', desc: 'Admissions, renewals & attendance tracking.' },
   { title: 'Payments & Packages', desc: 'Flexible plans, receipts & balances.' },
