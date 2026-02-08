@@ -29,7 +29,7 @@ export default function HomePage() {
     const errorCode = params.get('error_code')
 
     if (error === 'access_denied') {
-      router.replace(`/auth-error?code=${errorCode || 'unknown'}`)
+      router.replace(`/auth-error?code=${errorCode || 'unknown error'}`)
     }
   }, [router])
 
