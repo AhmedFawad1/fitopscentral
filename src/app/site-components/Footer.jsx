@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import Logo from './Logo'
 import { usePathname } from 'next/navigation'
-const donotShowNavbarPaths = ['/app', '/app/']
+import { noNavbarPaths } from '../lib/functions'
+
 export default function Footer() {
   const path = usePathname()
   return (
-    <footer hidden={donotShowNavbarPaths.includes(path)} className="border-t border-border bg-background">
+    <footer hidden={noNavbarPaths.includes(path)} className="border border-transparent border-t-[var(--border)] bg-background">
       <div className="max-w-7xl mx-auto px-6 py-20">
 
         {/* Top Grid */}
@@ -66,7 +67,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom */}
-        <div className="mt-16 pt-8 border-t text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>© {new Date().getFullYear()} FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>

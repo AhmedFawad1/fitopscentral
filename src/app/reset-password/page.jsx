@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
       return
     }
 
-    router.push('/login')
+    router.push('/app')
   }
 
   return (
@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm"
+        className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-card p-8 shadow-sm"
       >
         <h1 className="text-2xl font-bold text-foreground">
           Set a new password
@@ -120,7 +120,7 @@ function Input({ label, icon, ...props }) {
         <input
           {...props}
           required
-          className="w-full rounded-xl border border-border bg-background 
+          className="w-full rounded-xl border border-[var(--border)] bg-background 
                      pl-11 pr-4 py-3 text-sm text-foreground
                      focus:outline-none focus:ring-2 focus:ring-primary/40"
         />

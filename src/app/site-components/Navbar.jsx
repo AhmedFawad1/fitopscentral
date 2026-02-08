@@ -17,7 +17,7 @@ const navLinks = [
   { label: 'FAQs', href: '/#faqs' },
   { label: 'Blogs', href: '#blogs' },
 ]
-const donotShowNavbarPaths = ['/login', '/register', '/app']
+const donotShowNavbarPaths = ['/login', '/register', '/app','/forgot-password/','/reset-password/']
 export default function Navbar() {
   const [open, setOpen] = useState(false)
   const [theme, setTheme] = useState('light')

@@ -37,7 +37,7 @@ const faqs = [
 
 export default function FAQSection() {
   return (
-    <section id='faqs' className="py-10 border-t bg-background">
+    <section id='faqs' className="py-10 border border-transparent border-t-[var(--border)] border-b-[var(--border)] bg-background">
       <div className="max-w-4xl mx-auto px-6">
 
         {/* Heading */}
@@ -55,7 +55,7 @@ export default function FAQSection() {
           {faqs.map((faq) => (
             <details
               key={faq.question}
-              className="group rounded-2xl border bg-card"
+              className="group rounded-2xl border border-[var(--border)] bg-card"
             >
               <summary
                 className="

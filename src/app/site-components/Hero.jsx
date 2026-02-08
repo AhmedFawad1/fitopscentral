@@ -51,7 +51,7 @@ export default function Hero() {
 
             <Link
               href="#demo"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-border text-foreground hover:bg-muted/10 transition"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[var(--border)] text-foreground hover:bg-muted/10 transition"
             >
               Watch Demo
             </Link>
@@ -70,7 +70,7 @@ export default function Hero() {
           transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
           className="relative"
         >
-          <div className="relative rounded-3xl border border-border bg-card p-6 shadow-xl">
+          <div className="relative rounded-3xl border border-[var(--border)] bg-card p-6 shadow-xl">
 
             {/* Fake dashboard preview */}
             <div className="grid grid-cols-2 gap-4">

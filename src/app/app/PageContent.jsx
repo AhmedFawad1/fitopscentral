@@ -19,7 +19,6 @@ import CustomersContainer from './Pages/customers/CustomersContainer';
 import DashboardContainer from './Pages/dashboard/DashboardContainer';
 import SalesContainer from './Pages/saleslegure/SalesContainer';
 import WhatsappContainer from './Pages/whatsapp/WhatsappContainer';
-import { useWhatsappManager } from './Pages/whatsapp/useWhatsappManager';
 import WhatsappUI from './Pages/whatsapp/WhatsappUI';
 import { whatsappService } from './Pages/whatsapp/whatsappService';
 import { resourceServices } from './resourceServices';
@@ -64,7 +63,7 @@ export default function PageContent() {
   const showBroadcastMessage = useSelector((state) => state.profile.showBroadcastMessage);
   const [open, setOpen] = useState(false);
   const autoClosure = useSelector((state) => state.profile.autoClosure);
-  // const logic = useWhatsappManager({ user, whatsappService });
+ 
   const resourcesManager = useResourcesManager({ dispatch, user: user?.gym_id ? user : null, resourceServices });
   
   useEffect(()=>{

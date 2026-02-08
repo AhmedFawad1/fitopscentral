@@ -7,10 +7,11 @@
   --background: #ffffff;
   --foreground: #0f172a;
   --logo-primary: #02738f;
+  --border-primary: #02738f;
   --primary: #02738f;
   --primary-hover: #0393b4;
   --border-base: #d1d5db;
-  --border: #e5e7eb;
+  --border: #c4c0c0;
   --muted: #6b7280;
   --logo-primary-dark: #33c2dd;
   --color-primary: #02738f;
@@ -42,9 +43,10 @@
   --foreground: #f9fafb;
   --logo-primary: #33c2dd;
   --primary: #33c2dd;
+  --border-primary: #33c2dd;
   --primary-hover: #4dd4ee;
 
-  --border: #1f2937;
+  --border: #7d8186;
   --border-base: #374151;
   --muted: #9ca3af;
 
@@ -175,6 +177,21 @@ button {
 }
 #pricing {
   scroll-margin-top: 80px;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  box-shadow: 0 0 0px 1000px var(--background) inset;
+  transition: background-color 5000s ease-in-out 0s;
+  color: var(--foreground);
 }
 
 @keyframes expandCenterHole {

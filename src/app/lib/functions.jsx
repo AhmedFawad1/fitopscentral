@@ -109,7 +109,7 @@ export const getTotalAmount = (selectedPackage, selectedTrainer, form) => {
         balance: (totalAmount - (form.amount_paid || 0) - (form.discount || 0))
     };
 }
-export const noNavbarPaths = ['/login', '/signup','/forgot-password','/reset-email-sent','/reset-password','/app','/app/','/app/login','/app/signup'];
+export const noNavbarPaths = ['/login', '/signup','/forgot-password/','/reset-email-sent/','/reset-password/','/app','/app/','/app/login','/app/signup'];
 
 export function genUUID() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

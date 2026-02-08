@@ -108,8 +108,8 @@ export default function PricingSection() {
               transition={{ delay: i * 0.1 }}
               className={`relative rounded-3xl p-8 border transition shadow-sm
                 ${plan.highlight
-                  ? 'border-primary bg-primary/5 scale-[1.06] shadow-lg'
-                  : 'border-border bg-card'
+                  ? 'border-[var(--border-primary)] bg-primary/5 scale-[1.06] shadow-lg'
+                  : 'border-[var(--border)] bg-card'
                 }`}
             >
               {plan.highlight && (
@@ -155,7 +155,7 @@ export default function PricingSection() {
                   font-semibold transition
                   ${plan.highlight
                     ? 'bg-primary text-white hover:bg-primary-hover'
-                    : 'border border-border hover:bg-muted/10'
+                    : 'border border-[var(--border)] hover:bg-muted/10'
                   }`}
               >
                 {plan.name === 'Enterprise' ? 'Contact Sales' : 'Get Started'}
@@ -183,7 +183,7 @@ export default function PricingSection() {
             {addons.map(addon => (
               <div
                 key={addon.name}
-                className="rounded-2xl border border-border bg-card p-6 
+                className="rounded-2xl border border-[var(--border)] bg-card p-6 
                            shadow-sm hover:shadow-md transition"
               >
                 <h4 className="text-lg font-semibold text-foreground">

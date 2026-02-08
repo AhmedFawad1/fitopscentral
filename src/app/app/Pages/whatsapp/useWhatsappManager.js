@@ -2,6 +2,7 @@ import { setEngineStatus, setSendMessage, setToast } from "@/store/profileSlice"
 import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { useSelector } from "react-redux";
+import { useRuntime } from "@/hooks/useRuntime";
 
 export function useWhatsappManager({
   user,
@@ -11,7 +12,7 @@ export function useWhatsappManager({
 }) {
   const sendMsg = useSelector((s) => s.profile.sendMessage);
   const enabled = !!user && user.tier >= 8;
-
+  const { isTauri, isReady } = useRuntime();
   const wsRef = useRef(null);
   const connectingRef = useRef(false);
   const prevSnapshotRef = useRef(null);
@@ -114,8 +115,8 @@ export function useWhatsappManager({
    * Engine Startup
    * ------------------------------------------------- */
   useEffect(() => {
-    if (!enabled || connectingRef.current) return;
-
+    if (!enabled || connectingRef.current || !isReady) return;
+    if (!isTauri) return;
     connectingRef.current = true;
 
     whatsappService
@@ -124,7 +125,7 @@ export function useWhatsappManager({
       .catch(() => {
         connectingRef.current = false;
       });
-  }, [enabled]);
+  }, [enabled, isReady]);
 
   useEffect(() => {
     if (sendMsg) {

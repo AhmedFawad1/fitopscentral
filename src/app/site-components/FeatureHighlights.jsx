@@ -80,7 +80,7 @@ export default function FeatureHighlights() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08 }}
-              className="group rounded-3xl border border-border bg-card p-6 
+              className="group rounded-3xl border border-[var(--border)] bg-card p-6 
                          shadow-sm hover:shadow-md transition"
             >
               {/* Icon */}

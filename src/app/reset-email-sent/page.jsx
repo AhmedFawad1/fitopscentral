@@ -12,7 +12,7 @@ export default function ResetEmailSent() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md rounded-3xl border border-border bg-card 
+        className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-card 
                    p-8 shadow-sm text-center"
       >
         <div className="mx-auto w-12 h-12 rounded-full bg-primary/15 
@@ -30,9 +30,9 @@ export default function ResetEmailSent() {
         </p>
 
         <Link
-          href="/login"
+          href="/app"
           className="inline-block mt-8 px-8 py-3 rounded-full 
-                     border border-border font-semibold
+                     border border-[var(--border)] font-semibold
                      hover:bg-muted/10 transition"
         >
           Back to login

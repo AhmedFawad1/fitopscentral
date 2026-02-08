@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { sessionServices } from "./sessionServices";
 import { useDispatch } from "react-redux";
 import { useRuntime } from "@/hooks/useRuntime";
+import { containsDangerousChars, exceedsLength, isRateLimited, isValidEmail, sanitizeEmail, validateSafeInput } from "../utils/security";
 
 export function useSessionManager(){
     const dispatch = useDispatch();
@@ -23,25 +24,70 @@ export function useSessionManager(){
     const [isSigningOut, setIsSigningOut] = useState(false);
     const router = useRouter();
     const handleLogin = async (e) => {
-        
-        if(!email || !password || email.trim() === '' || password.trim() === ''){
+        e.preventDefault();
+
+        // 🛑 Rate-limit spam clicks / bots
+        if (isRateLimited()) {
+            setError("Slow down bestie 🫣 try again in a sec.");
+            return;
+        }
+        if (!validateSafeInput(email)) {
+            setError("Invalid input detected.");
+            return;
+        }
+
+        if (!email || !password) {
             setError("Please fill in all fields.");
-            setSigningIn(false);
             return;
         }
-        const { data, error } = await sessionServices.login(email, password);
-        //console.log("Login response:", data, error);
+
+        // 🧼 SANITIZE EMAIL ONLY
+        const cleanEmail = sanitizeEmail(email);
+
+        // 🚨 BLOCK WEIRD INPUT
+        if (
+            cleanEmail === "" ||
+            password.trim() === "" ||
+            exceedsLength(cleanEmail, 254) ||
+            exceedsLength(password, 128)
+        ) {
+            setError("Invalid input.");
+            return;
+        }
+
+        // 🚨 XSS / Injection defense
+        if (containsDangerousChars(cleanEmail)) {
+            setError("Invalid email format.");
+            return;
+        }
+
+        // 🚨 Email structure validation
+        if (!isValidEmail(cleanEmail)) {
+            setError("Please enter a valid email.");
+            return;
+        }
+
+        // ❌ DO NOT SANITIZE PASSWORD
+        // passwords can legally contain symbols
+
+        setSigningIn(true);
+
+        const { data, error } = await sessionServices.login(
+            cleanEmail,
+            password
+        );
+
         if (error) {
-            setError(error.message);
+            setError(`${error.message}`);
             setSigningIn(false);
             return;
-        }else{
-            setUserData(data.user);
-            setCheckingSession(true);
-            setSigningIn(true)
-            setError(null)
         }
-    }
+
+        setUserData(data.user);
+        setCheckingSession(true);
+        setError(null);
+        };
+
 
     const onSignout = async () => {
         setCheckingSession(true);

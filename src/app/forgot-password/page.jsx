@@ -6,6 +6,7 @@ import { Mail } from 'lucide-react'
 import { useState } from 'react'
 import { supabase } from '../lib/createClient'
 import { useRouter } from 'next/navigation'
+import { containsDangerousChars, exceedsLength, isRateLimited, isValidEmail, sanitizeEmail, validateSafeInput } from '../utils/security'
 
 export default function ForgotPasswordPage() {
   const router = useRouter()
@@ -17,8 +18,50 @@ export default function ForgotPasswordPage() {
     e.preventDefault()
     setLoading(true)
     setError(null)
+    // 🛑 Rate-limit spam clicks / bots
+    if (isRateLimited()) {
+        setError("Slow down bestie 🫣 try again in a sec.");
+        return;
+    }
+    if (!validateSafeInput(email)) {
+        setError("Invalid input detected.");
+        return;
+    }
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    if (!email) {
+        setError("Please enter your email.");
+        setLoading(false);
+
+        return;
+    }
+
+    // 🧼 SANITIZE EMAIL ONLY
+    const cleanEmail = sanitizeEmail(email);
+
+    // 🚨 BLOCK WEIRD INPUT
+    if (
+        cleanEmail === "" ||
+        exceedsLength(cleanEmail, 254) 
+    ) {
+        setError("Invalid input.");
+        setLoading(false);
+        return;
+    }
+
+    // 🚨 XSS / Injection defense
+    if (containsDangerousChars(cleanEmail)) {
+        setError("Invalid email format.");
+        setLoading(false);
+        return;
+    }
+
+    // 🚨 Email structure validation
+    if (!isValidEmail(cleanEmail)) {
+        setError("Please enter a valid email.");
+        setLoading(false);
+        return;
+    }
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
       redirectTo: `${window.location.origin}/reset-password`,
     })
 
@@ -26,6 +69,7 @@ export default function ForgotPasswordPage() {
 
     if (error) {
       setError(error.message)
+      setLoading(false);
       return
     }
 
@@ -38,7 +82,7 @@ export default function ForgotPasswordPage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-md rounded-3xl border border-border bg-card p-8 shadow-sm"
+        className="w-full max-w-md rounded-3xl border border-[var(--border)] bg-card p-8 shadow-sm"
       >
         <h1 className="text-2xl font-bold text-foreground">
           Reset your password
@@ -48,7 +92,7 @@ export default function ForgotPasswordPage() {
           Enter your email and we’ll send you a password reset link.
         </p>
 
-        <form onSubmit={handleReset} className="mt-8 space-y-5">
+        <div className="mt-8 space-y-5">
           <Input
             label="Email address"
             type="email"
@@ -62,7 +106,9 @@ export default function ForgotPasswordPage() {
           )}
 
           <button
-            type="submit"
+          onClick={(e)=>{
+            handleReset(e);
+          }}
             disabled={loading}
             className="w-full mt-4 py-3 rounded-full bg-[var(--primary)] 
                        text-white font-semibold text-lg
@@ -71,11 +117,11 @@ export default function ForgotPasswordPage() {
           >
             {loading ? 'Sending…' : 'Send reset link'}
           </button>
-        </form>
+        </div>
 
         <p className="mt-6 text-sm text-muted text-center">
           Remember your password?{' '}
-          <Link href="/login" className="text-primary hover:underline">
+          <Link href="/app" className="text-primary hover:underline">
             Back to login
           </Link>
         </p>
@@ -97,7 +143,7 @@ function Input({ label, icon, ...props }) {
         <input
           {...props}
           required
-          className="w-full rounded-xl border border-border bg-background 
+          className="w-full rounded-xl border border-[var(--border)] bg-background 
                      pl-11 pr-4 py-3 text-sm text-foreground
                      focus:outline-none focus:ring-2 focus:ring-primary/40"
         />

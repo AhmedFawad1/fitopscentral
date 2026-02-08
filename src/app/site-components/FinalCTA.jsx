@@ -61,7 +61,7 @@ export default function FinalCTA() {
             href="/contact-sales"
             className="inline-flex items-center justify-center 
                        px-10 py-4 rounded-full 
-                       border border-border text-foreground 
+                       border border-[var(--border)] text-foreground 
                        font-semibold text-lg
                        hover:bg-muted/10 transition"
           >

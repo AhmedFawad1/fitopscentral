@@ -13,7 +13,7 @@ export default function VideoDemoModal() {
       <button
         onClick={() => setOpen(true)}
         className="inline-flex items-center gap-2 px-6 py-3 
-                   rounded-full border border-border 
+                   rounded-full border border-[var(--border)] 
                    text-foreground font-medium
                    hover:bg-muted/10 transition"
       >
@@ -33,7 +33,7 @@ export default function VideoDemoModal() {
           >
             <motion.div
               className="relative w-full max-w-4xl rounded-3xl bg-background 
-                         border border-border shadow-xl overflow-hidden"
+                         border border-[var(--border)] shadow-xl overflow-hidden"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

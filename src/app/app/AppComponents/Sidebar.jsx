@@ -1,6 +1,6 @@
 'use client'
 import { ArrowBigLeft, Menu, X } from 'lucide-react'
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { useDispatch, useSelector } from 'react-redux'
@@ -9,13 +9,15 @@ import Logo from '@/app/site-components/Logo'
 import { supabase } from '@/app/lib/createClient'
 import { navItems } from '@/app/lib/functions'
 import ParseSvgIcon from '@/app/site-components/ParseSvgIcon'
+import { useRuntime } from '@/hooks/useRuntime'
 
 export default function Sidebar({open , setOpen, setIsSigningOut, pageView, setPageView, onSignout}) {
   const router = useRouter();
   const selected = useSelector((state) => state.auth.selectedTab);
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  const [items, setItems] = React.useState(navItems);
+  const [items, setItems] = useState(navItems);
+  const { isReady, isTauri } = useRuntime();
   const appConfig = useSelector((state) => state.profile.tauriConfig);
   useEffect(()=>{
      if(selected !== 'customers'){
@@ -63,13 +65,14 @@ export default function Sidebar({open , setOpen, setIsSigningOut, pageView, setP
   
   useEffect(()=>{
     // Filter nav items based on user role
-    if(!user || !appConfig) return;
+    if(!user || !isReady) return;
     const filteredItems = {...navItems};
+    
     let roleManager = user?.role_manager;
     if(!roleManager) return
     roleManager = roleManager[user.role]
     //alert(!roleManager.canAddUsers)
-    if(!appConfig?.biometricapp){
+    if(!appConfig?.biometricapp || !isTauri){
         delete filteredItems['Attendance'];
         delete filteredItems['Device Logs'];
     }
@@ -91,8 +94,11 @@ export default function Sidebar({open , setOpen, setIsSigningOut, pageView, setP
     if(!roleManager.canManageTemplates){
         delete filteredItems['Templates'];
     }
+    if(!isTauri){
+        delete filteredItems['WhatsApp'];
+    }
     setItems(filteredItems);
-  }, [user, appConfig]);
+  }, [user, appConfig, isReady]);
   
   return (
     <div

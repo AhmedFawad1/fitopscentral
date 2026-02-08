@@ -19,8 +19,7 @@ export default function LoginUI({
 
         {/* Spinner */}
         <div
-            className="w-12 h-12 rounded-full border-4 border-border
-                    border-t-[var(--primary)] animate-spin"
+            className="w-12 h-12 rounded-full border-4 border-[var(--primary)] border-t-transparent animate-spin"
         />
 
         {/* Text */}
@@ -36,8 +35,8 @@ export default function LoginUI({
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-4xl rounded-3xl border border-border
-                    bg-card shadow-sm overflow-hidden"
+        className="w-full max-w-4xl rounded-3xl border border-[var(--border)]
+                    bg-card shadow-lg overflow-hidden"
         >
         <div className="grid md:grid-cols-2">
 
@@ -84,7 +83,7 @@ export default function LoginUI({
                 <label className="flex items-center gap-2 text-muted">
                     <input
                     type="checkbox"
-                    className="rounded border-border"
+                    className="rounded border-[var(--border)] text-primary focus:ring-primary/40"
                     aria-label="Remember me"
                     />
                     Remember me
@@ -100,8 +99,8 @@ export default function LoginUI({
                             text-white font-semibold text-lg
                             hover:bg-[var(--primary-hover)] transition
                             disabled:opacity-50"
-                onClick={()=>{
-                    handleLogin();
+                onClick={(e)=>{
+                    handleLogin(e);
                 }}
                 >
                 {signingIn ? "Logging in…" : "Log In"}
@@ -134,9 +133,12 @@ function Input({ label, icon, ...props }) {
           aria-label={label}
           {...props}
           required
-          className="w-full rounded-xl border border-border bg-background 
+          spellCheck={false}
+          onPaste={(e) => e.preventDefault()} // optional
+          autoComplete='off'
+          className="w-full rounded-xl border border-[var(--border)] 
                      pl-11 pr-4 py-3 text-sm text-foreground
-                     focus:outline-none focus:ring-2 focus:ring-primary/40"
+                     focus:outline-none focus:ring-2 focus:ring-primary/40 autofill:!bg-yellow-500"
         />
       </div>
     </div>

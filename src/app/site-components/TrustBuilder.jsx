@@ -113,7 +113,7 @@ export default function TrustBuilder() {
           {[...testimonials, ...testimonials].map((t, index) => (
             <div
               key={index}
-              className="w-[320px] shrink-0 rounded-3xl border border-border bg-card p-6 shadow-sm"
+              className="w-[320px] shrink-0 rounded-3xl border border-[var(--border)] bg-card p-6 shadow-sm"
             >
               {/* Logo */}
               <div className="flex items-center justify-between mb-4">
