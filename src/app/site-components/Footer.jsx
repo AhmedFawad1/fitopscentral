@@ -7,7 +7,7 @@ import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 
 export default function Footer() {
-  const web = process.env.NEXT_PUBLIC_WEB;
+  const web = process.env.NEXT_PUBLIC_WEB === undefined ? true : process.env.NEXT_PUBLIC_WEB === 'true';
   const path = usePathname()
   return (
     web &&
@@ -70,7 +70,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 FitOpsCentral. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
 
