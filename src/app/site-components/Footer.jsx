@@ -74,7 +74,6 @@ export default function Footer() {
           <p>© {date.getFullYear()} FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
-
       </div>
     </footer>
   )

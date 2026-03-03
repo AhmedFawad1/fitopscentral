@@ -4,7 +4,8 @@ const nextConfig = {
   output: isTauri ? 'export' : undefined,
   images: { unoptimized: true },
   trailingSlash: true,
-  reactStrictMode: false
+  reactStrictMode: false,
+  
 };
 
 export default nextConfig;
