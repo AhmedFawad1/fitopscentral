@@ -8,6 +8,7 @@ import { noNavbarPaths } from '../lib/functions'
 
 export default function Footer() {
   const isWeb = process.env.NEXT_PUBLIC_WEB === "true";
+  const date = new Date();
   const path = usePathname()
   return (
     isWeb &&
@@ -70,7 +71,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} FitOpsCentral. All rights reserved.</p>
+          <p>© {date.getFullYear()} FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
 
