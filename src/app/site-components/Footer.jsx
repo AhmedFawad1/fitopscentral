@@ -15,6 +15,7 @@ export default function Footer() {
   useEffect(() => {
     setMounted(true)
     const path = window.location.pathname
+    console.log('Current path:', path, noNavbarPaths)  // Debugging line
     setHideFooter(noNavbarPaths.includes(path))
   }, [])
 
