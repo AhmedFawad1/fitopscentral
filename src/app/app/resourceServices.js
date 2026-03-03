@@ -1,5 +1,6 @@
 import { supabase } from "@/app/lib/createClient";
 import { invoke } from "@tauri-apps/api/core";
+import { get } from "node:http";
 
 async function addColumnIfMissing(table, column, definition) {
   const columns = await invoke('run_sqlite_query', {
@@ -137,6 +138,19 @@ export const resourceServices = {
           }
             return null;
     },
+    getStaffProfile: async(gymId, branchId, id)=>{  
+            let query =`SELECT * FROM staff_local WHERE gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and serial_number='${id}' AND deleted IS NOT TRUE;`;
+            let data = await invoke('run_sqlite_query', { query: query });
+            if(data && data.length > 0){
+                let staff = data[0];
+                staff.type = 'staff';
+                    let payroll = await invoke('run_sqlite_query', { query: `SELECT * FROM payroll_view_local WHERE gym_id='${gymId}' ${!branchId ? '' : `AND branch_id='${branchId}'`} and staff_id='${staff.id}';` });
+                    staff = { ...staff, ...payroll[0] };
+                    staff['status'] = staff['status'] === '' ? 'active' : staff['status'];
+                return staff;
+            }
+            return null;
+    },
     playSound: async(status)=>{
         if(status === 'balance_due'){
             status = 'Inactive'
@@ -167,6 +181,7 @@ export const resourceServices = {
     },
     markStaffAttendance: async(gymId, branchId, id)=>{
         if (!id) return;
+        //console.log("Marking staff attendance for ID:", id);
         invoke("upsert_staff_attendance", {
             id: id,
             gymId: gymId,

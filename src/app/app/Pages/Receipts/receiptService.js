@@ -345,6 +345,7 @@ export const receiptService = {
             trainer_expiry='${trainerPayload.trainer_expiry}',
             total_amount=${trainerPayload.total_amount},
             balance=${trainerPayload.balance},
+            discount=${trainerPayload.discount || 0},
             updated_at='${new Date().toISOString()}',
             is_dirty=1
             WHERE id='${membershipId}' AND gym_id='${gym_id}';`;

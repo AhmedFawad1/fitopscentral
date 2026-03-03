@@ -120,20 +120,41 @@ export default function ReceiptUI({
                                 })
                             }}
                             error={errors.trainer_start}
+                            disabled={permissions?.canChangeDueDates? false : true}
                         />
                         <InputField
                             label="Fee"
                             type="text"
                             value={formValues.new_trainer?.fee || ''}
                             onChange={(e)=>{
+                                // allow only numbers in fee input
+                                const fee = parseInt(e.target.value);
                                 onFieldChange('new_trainer', {
                                     start_date: formValues.new_trainer?.start_date || '',
                                     trainer_id: formValues.new_trainer?.trainer_id || '',
                                     end_date: formValues.new_trainer?.end_date || '',
-                                    fee: e.target.value
+                                    fee: fee
                                 })
                             }}
                             error={errors.trainer_fee}
+                            disabled={permissions?.canChangeDueDates? false : true}
+                        />
+                        <InputField
+                            label="Discount"
+                            type="text"
+                            value={formValues.new_trainer?.discount || ''}
+                            onChange={(e)=>{
+                                // allow only numbers in discount input
+                                const discount = parseInt(e.target.value);
+                                onFieldChange('new_trainer', {
+                                    start_date: formValues.new_trainer?.start_date || '',
+                                    trainer_id: formValues.new_trainer?.trainer_id || '',
+                                    end_date: formValues.new_trainer?.end_date || '',
+                                    fee: formValues.new_trainer?.fee || 0,
+                                    discount: discount
+                                })
+                            }}
+                            error={errors.trainer_discount}
                         />
                         { formValues.receipt?.status !== 'cancelled' &&
                         <button
@@ -168,9 +189,12 @@ export default function ReceiptUI({
                         />
                         <ToggleButton
                             label='Blocked List'
-                            checked={formValues.BLOCKED || customer.BLOCKED || false}
-                            onChange={(e)=>{
-                                onFieldChange('BLOCKED', e.target.checked)
+                            checked={
+                                formValues['BLOCKED'] !== undefined ? formValues['BLOCKED'] : customer['BLOCKED']
+                            }
+                                onChange={(e)=>{
+                                let newValue = formValues['BLOCKED'] !== undefined ? !resolveBoolean(formValues['BLOCKED']) : !resolveBoolean(customer['BLOCKED']);
+                                onFieldChange('BLOCKED', newValue);
                             }}
                             disabled={true}
                             customClass='justify-center py-4'
@@ -281,6 +305,7 @@ export default function ReceiptUI({
                             value={formValues.receipt_date || ''}
                             onChange={(e) => onFieldChange('receipt_date', e.target.value)}
                             error={errors.receipt_date}
+                            disabled={permissions?.canChangeDueDates? false : true}
                         />
                         <InputField
                                 label='Receipt Type'
@@ -360,6 +385,7 @@ export default function ReceiptUI({
                                 onFieldChange('trainer_expiry', trainer_expiry);
                             }}
                             error={errors.trainer_assigned_on}
+                            disabled={permissions?.canChangeDueDates? false : true}
                         />
                         {
                                 formValues.trainer_id ?
@@ -374,6 +400,7 @@ export default function ReceiptUI({
                                         
                                     }}
                                     error={errors.trainer_fee}
+                                    disabled={permissions?.canChangeDueDates? false : true}
                                 />:
                                 <></>
                             }
@@ -886,7 +913,7 @@ export function ToggleButton({ label, name, checked, onChange, customClass = '',
                 <input
                     type="checkbox"
                     name={name}
-                    checked={checked}
+                    checked={resolveBoolean(checked)}
                     onChange={onChange}
                 />
                 <span className="ml-2">{label}</span>
@@ -894,6 +921,69 @@ export function ToggleButton({ label, name, checked, onChange, customClass = '',
             {error && <span className="text-red-500 ml-2">{error}</span>}
         </div>
     );
+}
+export function ToggleButtonSpecial({
+    label,
+    name,
+    checked,
+    onChange,
+    customClass = '',
+    error = '',
+}) {
+    const isChecked = resolveBoolean(checked);
+
+    return (
+        <div className={`flex flex-col ${customClass}`}>
+            <label className="flex items-center gap-5 cursor-pointer select-none">
+                
+                {/* Label */}
+                <span className="text-sm font-bold text-gray-700">
+                    {label}
+                </span>
+
+                {/* Toggle */}
+                <div className="relative">
+                    <input
+                        type="checkbox"
+                        name={name}
+                        checked={isChecked}
+                        onChange={onChange}
+                        className="sr-only"
+                    />
+
+                    <div
+                        className={`w-12 h-6 flex items-center rounded-full p-1 transition-all duration-300 ${
+                            isChecked
+                                ? 'bg-emerald-500'
+                                : 'bg-gray-300'
+                        }`}
+                    >
+                        <div
+                            className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${
+                                isChecked
+                                    ? 'translate-x-6'
+                                    : 'translate-x-0'
+                            }`}
+                        />
+                    </div>
+                </div>
+            </label>
+
+            {error && (
+                <span className="text-xs text-red-500 mt-1">
+                    {error}
+                </span>
+            )}
+        </div>
+    );
+}
+function resolveBoolean(value) {
+    if(value === undefined || value === null) return false;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+        return value.toLowerCase() === 'true';
+    }
+    return false;
 }
 function LabelCase({label, value, textColor = 'text-gray-700'}) {
     return (

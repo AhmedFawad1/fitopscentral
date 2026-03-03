@@ -485,7 +485,7 @@ async fn stop_whatsapp_engine(
         {
             Command::new("taskkill")
                 .args(["/PID", &pid.to_string(), "/F"])
-                .output()
+                .status()
                 .map_err(|e| format!("Failed to kill engine: {}", e))?;
         }
 
@@ -493,7 +493,7 @@ async fn stop_whatsapp_engine(
         {
             Command::new("kill")
                 .arg(pid.to_string())
-                .output()
+                .status()
                 .map_err(|e| format!("Failed to kill engine: {}", e))?;
         }
 
@@ -517,7 +517,7 @@ async fn is_engine_running() -> bool {
 fn kill_process(name: &str) {
     let mut system = System::new_all();
     system.refresh_all();
-
+    println!("Checking for processes named '{}'", name);
     for (pid, process) in system.processes() {
         if process.name().eq_ignore_ascii_case(name) {
             println!("Killing {} (PID: {})", name, pid);
@@ -558,15 +558,28 @@ fn main() {
                         #[cfg(target_os = "windows")]
                         {
                             let _ = std::process::Command::new("taskkill")
-                                .args(["/PID", &pid.to_string(), "/F"])
-                                .output();
+                                .args([
+                                    "/PID",
+                                    &pid.to_string(),
+                                    "/T",   // Kill child processes
+                                    "/F"    // Force
+                                ])
+                                .status();
                         }
+
+                        // let _ = std::process::Command::new("taskkill")
+                        // .args(["/IM", "node.exe", "/T", "/F"])
+                        // .status();
+
+                        // let _ = std::process::Command::new("taskkill")
+                        // .args(["/IM", "chrome.exe", "/T", "/F"])
+                        // .status();
 
                         #[cfg(not(target_os = "windows"))]
                         {
                             let _ = std::process::Command::new("kill")
                                 .arg(pid.to_string())
-                                .output();
+                                .status();
                         }
                     }
                     // Clone app handle twice: one for async, one for local use
@@ -586,21 +599,6 @@ fn main() {
                     // Kill native device processes
                     kill_process("ZKBridge.exe");
                     kill_process("SecuGenDemo.exe");
-
-                    // ----------------------------------------------
-                    // WHATSAPP PID CLEANUP (NO LIFETIME ERRORS)
-                    // ----------------------------------------------
-                    // let pid = {
-                    //     let engine_state = app_for_pid.state::<EngineState>();
-                    //     let guard = engine_state.whatsapp_pid.lock().unwrap();
-                    //     let x = *guard;         // extract PID safely
-                    //     x                       // this value returned from block
-                    // }; // guard dropped HERE
-
-                    // if let Some(pid) = pid {
-                    //     println!("Killing WhatsApp Node process PID {}", pid);
-                    //     kill_pid(pid);
-                    // }
                 }
             })
         .plugin(tauri_plugin_shell::init())

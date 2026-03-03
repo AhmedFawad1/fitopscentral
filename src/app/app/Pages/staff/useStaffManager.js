@@ -223,7 +223,9 @@ export function useStaffManager({
             email: formValues.email || null,
             address: formValues.address || null,
             updated_at: new Date().toISOString(),
-            updated_by: user.id
+            updated_by: user.id,
+            status: formValues.status || 'active',
+            gender: formValues.gender || 'other'
         };
         let { data, error } = isWeb ? await staffService.save(payload) : await staffService.saveSQLite(payload);
         if (error) {

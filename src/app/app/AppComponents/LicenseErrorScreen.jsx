@@ -66,11 +66,11 @@ export default function LicenseErrorScreen({
           )}
 
           {
-            message?.includes('Startup error') ?
+            message?.includes('Startup error') || message?.includes('Your license has expired')?
             <button
             onClick={async () => {
                 await supabase.auth.signOut();
-                router.push('/login');
+                onRetry();
             }}
             className="w-full rounded-xl border border-zinc-700 py-2.5 text-sm text-zinc-300 hover:bg-zinc-800 transition"
           >

@@ -10,5 +10,6 @@
   "signInLock": false,
   "autoResendMessageOnRenewal":true,
   "sendCopyToAdmin": ["3328266209"],
-  "testmode": true
+  "testmode": true,
+  "headless": true
 }

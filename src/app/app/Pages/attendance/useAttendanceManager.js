@@ -25,7 +25,6 @@ const headers = [
 const headersStaff = [
   "Staff ID",
   "Name",
-  "Status",
   "Date",
   "Calculated Salary",
   "Total Commission",
@@ -54,9 +53,14 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
   const abortRef = useRef(false);
 
   const handleClick = async(attendanceID)=>{
-        let data = await resourceServices.getProfile(user.gym_id, user.branch_id, attendanceID);
-        data['membership_history'] = JSON.parse(data.membership_history);
-        setSelectedCustomer(data);
+        if(attendanceType === 'Members'){
+          let data = await resourceServices.getProfile(user.gym_id, user.branch_id, attendanceID);
+          data['membership_history'] = JSON.parse(data.membership_history);
+          setSelectedCustomer(data);
+        }else{
+          let data = await resourceServices.getStaffProfile(user.gym_id, user.branch_id, attendanceID);
+          setSelectedCustomer(data);
+        }
     }
   /* -------------------- SEARCH DEBOUNCE -------------------- */
   useEffect(() => {
@@ -79,7 +83,7 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
         searchQuery &&
         !isNaN(searchQuery) &&
         searchQuery.toString().length < 6;
-
+    
       const query =
         attendanceType === 'Members'
           ? buildMemberAttendanceQuery({
@@ -95,9 +99,10 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
               selectedDate,
               searchQuery
             });
-
+      console.log('Running attendance query:', query);      
       try {
         const rows = await runAttendanceQuery(query);
+        console.log('Attendance query result:', rows);
         if (!abortRef.current) {
           setAttendanceData(rows || []);
           setUnfilteredData(rows || []);
@@ -114,7 +119,7 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
 
   /* -------------------- SUB FILTER -------------------- */
   useEffect(() => {
-    if (!unfilteredData) return;
+    if (!unfilteredData || attendanceType !== 'Members') return;
 
     let filtered = [...unfilteredData];
 
@@ -148,6 +153,7 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
     },[attendanceData])
   
   useEffect(()=>{
+        if(attendanceType !== 'Members') return;
        const fetchAttendanceForToday = async()=>{
           let todayDate = new Date().toISOString().split('T')[0];
           let query = `
@@ -170,14 +176,14 @@ export function useAttendanceManager(user, attendanceID, setSelectedCustomer) {
        };
        const interval = setInterval(() => {
         // only if no filter is applied
-        if (!searchQuery || searchQuery.trim() === "") {
+        if ((!searchQuery || searchQuery.trim() === "") && attendanceType === 'Members') {
           fetchAttendanceForToday();
         }
       }, 1000);
 
       // cleanup = no memory leaks, we are responsible adults 💅
       return () => clearInterval(interval);
-    }, [searchQuery, selectedDate]);
+    }, [searchQuery, selectedDate, attendanceType]);
   return {
     membersDetails,
     attendanceData,

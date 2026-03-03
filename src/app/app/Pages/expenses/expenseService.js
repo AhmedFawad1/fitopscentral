@@ -24,7 +24,10 @@ export const expenseService = {
   fetchSQLite: async (gymId, branchId, startDate, endDate) => {
     // Placeholder for SQLite fetch implementation
     return await invoke('run_sqlite_query', {
-      query: `SELECT * FROM expenses_local WHERE gym_id = '${gymId}' AND branch_id = '${branchId}' AND deleted = 0 ORDER BY name`,
+      query: `SELECT * FROM expenses_local WHERE gym_id = '${gymId}' AND branch_id = '${branchId}' AND deleted = 0 
+      ${startDate ? `AND txn_date >= '${startDate}'` : ''}
+      ${endDate ? `AND txn_date <= '${endDate}'` : ''}
+      ORDER BY txn_date DESC`,
     });
   },
   save: async pkg => {

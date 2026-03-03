@@ -124,7 +124,7 @@ export function useSessionManager(){
             const userData = await sessionServices.getSupabaseUser(isTauri);
             //console.log("Fetched user data:", userData);
             if(userData){
-                if(checkExpired(userData.end_date)){
+                if(checkExpired(userData.end_date) || userData.expired){
                     setLicenseError("Your license has expired. Please contact support.");
                     setCheckingSession(false);
                     return;

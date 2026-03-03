@@ -27,6 +27,12 @@ export function useExpenseManager({
   });
 
   const fetchExpenses = async () => {
+    console.log('Fetching expenses with params: ', {
+      gym_id: user.gym_id,
+      branch_id: formValues.branch_id,
+      startDate: formValues.startDate,
+      endDate: formValues.endDate
+    });
     const data = isWeb ? await expenseService.fetch(user.gym_id, formValues.branch_id, formValues.startDate, formValues.endDate) : await expenseService.fetchSQLite(user.gym_id, formValues.branch_id, formValues.startDate, formValues.endDate);
     setExpenses(data);
   };

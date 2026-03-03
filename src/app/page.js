@@ -16,7 +16,7 @@ import { useRuntime } from '../hooks/useRuntime'
 import HashScrollFix from './site-components/HashScrollFix'
 
 export default function HomePage() {
-  const { isTauri, isWeb, isReady } = useRuntime()
+  const { isTauri, isWeb, isReady, web } = useRuntime()
   const router = useRouter()
 
   // ✅ HOOK 1: auth error handler
@@ -35,14 +35,13 @@ export default function HomePage() {
 
   // ✅ HOOK 2: tauri redirect
   useEffect(() => {
-    if (isReady && isTauri) {
+    if (!web) {
       window.location.href = '/app'
     }
   }, [isReady, isTauri])
 
   // ✅ NOW safe to return conditionally
-  if (!isReady) return null
-  if (isTauri) return null
+  if (!web) return null
 
   return (
     <main className="bg-[var(--background)]">

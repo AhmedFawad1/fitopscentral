@@ -3,6 +3,8 @@ import React, { useEffect } from 'react'
 import InputField from '../../AppComponents/subcomponents/InputField';
 import ContactInput from '../../AppComponents/subcomponents/ContactInput';
 import { motion } from 'framer-motion';
+import { PictureUpload } from '../../AppComponents/subcomponents/PictureUpload';
+import { GenderToggle, ToggleButton, ToggleButtonSpecial } from '../Receipts/ReceiptUI';
 export default function StaffUI({
   user,  
   formValues,
@@ -32,26 +34,32 @@ export default function StaffUI({
         <div className={`fixed ${showModal?'block':'hidden'} inset-0 bg-black/50 flex items-center justify-center z-30`}>
             <div className={`flex flex-col py-3 relative  w-1/2 bg-[var(--background)] justify-center items-center ${formValues.id? '':'hidden'} space-x-10`}>
                 <h1 className='font-bold text-xl'>Staff Biometric Registration</h1>
-                <div className='flex w-full gap-3 justify-center items-center p-6'>
-                    <button
-                        className={`w-1/5 mt-4 py-1 px-2  ${status==='connected'?'block':'hidden'} rounded-md text-white ${registerBiometric ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
-                        onClick={() => setRegisterBiometric(!registerBiometric)}
-                    >
-                        {
-                            `${registerBiometric? 'Stop' : 'Start'}`
-                        }
-                    </button>   
-                    <button
-                        className={`w-1/5 ${registerBiometric ? 'hidden' : 'block'} mt-4 py-1 px-2 rounded-md text-white bg-red-600 hover:bg-red-700`}
-                        onClick={() => {
-                            invoke("zk_delete_user", { id: formValues.serial_number.toString() });
-                        }}
-                    >
-                        {
-                            `Delete`
-                        }
-                    </button> 
-                </div> 
+                {
+                    status === 'connected'?
+                    <div className='flex w-full gap-3 justify-center items-center p-6'>
+                        <button
+                            className={`w-1/5 mt-4 py-1 px-2  ${status==='connected'?'block':'hidden'} rounded-md text-white ${registerBiometric ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                            onClick={() => setRegisterBiometric(!registerBiometric)}
+                        >
+                            {
+                                `${registerBiometric? 'Stop' : 'Start'}`
+                            }
+                        </button>   
+                        <button
+                            className={`w-1/5 ${registerBiometric ? 'hidden' : 'block'} mt-4 py-1 px-2 rounded-md text-white bg-red-600 hover:bg-red-700`}
+                            onClick={() => {
+                                // invoke("zk_delete_user", { id: formValues.serial_number.toString() });
+                            }}
+                        >
+                            {
+                                `Delete`
+                            }
+                        </button> 
+                    </div> : 
+                    <div className='flex w-full gap-3 justify-center items-center p-6'>
+                        <p className='text-red-600'>Biometric device not connected</p>
+                    </div>
+                }
                 
                 <div>{deviceMessage}</div>
                 <button className='absolute flex justify-center items-center top-2 right-2 h-6 w-6 rounded-full text-white bg-red-700'
@@ -62,6 +70,35 @@ export default function StaffUI({
             </div>
         </div>
         <h1 className='text-2xl font-bold mb-2 text-center'>Staff Management</h1>
+        <div className='mx-40 lg:mx-80'>
+            <PictureUpload
+                gender={formValues.gender || 'male'}
+                imageUrl={formValues.photo_url || ''}
+                onImageChange={(url) => {
+                    onFieldChange('photo_url',url)
+                }}
+                isTauri={isTauri}
+            />            
+            <GenderToggle
+                value={formValues.gender || 'male'}
+                onChange={(value) => onFieldChange('gender', value)}
+                small={true}
+            />
+            <div className='flex justify-center my-5'> 
+                <ToggleButtonSpecial
+                    label={'Status'}
+                    checked={formValues.status === 'active' || 'active'}
+                    onChange={(value) => {
+                        onFieldChange('status', value.target.checked ? 'active' : 'inactive');
+                    }}
+                    options={[
+                        { label: 'Active', value: 'active' },
+                        { label: 'Inactive', value: 'inactive' }
+                    ]}
+                    small={true}
+                />
+            </div>
+        </div>
         <div className='my-2'>
         {
             permissions?.canManageBranches &&!singleBranch &&

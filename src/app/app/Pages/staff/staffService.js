@@ -20,6 +20,7 @@ export const staffService = {
     });
   },
   save: async staff => {
+    delete staff.gender; // Remove
     return supabase
       .from('staff')
       .upsert(staff);

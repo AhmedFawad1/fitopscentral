@@ -135,14 +135,13 @@ export function useReceiptManager({
     'Profile',
     status === 'connected' && 'Biometric Registration',
     hasReceipts && 'Send Message',
-    hasReceipts && 'Print Receipts',
+    //hasReceipts && 'Print Receipts',
     hasReceipts && 'Edit Membership',
     'Add Receipts'
     ].filter(Boolean);
 
   const onFieldChange = (field, value) => {
     // 🔹 CLEAR FORM
-    
     if (field === 'clearForm') {
       setFormValues({ 
         branch_id: user.branch_id,
@@ -197,7 +196,7 @@ export function useReceiptManager({
       if (packageRelatedFields.includes(field)) {
    
         nextValues = recalculatePackageValues(nextValues);
-        console.log(nextValues)
+        
       } 
       return nextValues;
     });
@@ -726,6 +725,9 @@ export function useReceiptManager({
     if(!new_trainer.fee){
         errors.fee = 'Trainer fee is required';
     }
+    if(!new_trainer.discount){
+        new_trainer.discount = 0;
+    }
     if(Object.keys(errors).length > 0){
         setErrors(errors);
         return;
@@ -747,7 +749,8 @@ export function useReceiptManager({
     let prevTotalAmount = parseFloat(selectedReceipt.total_amount) || 0;
     let newTotalAmount = prevTotalAmount + parseFloat(new_trainer.fee);
     let prevBalance = parseFloat(selectedReceipt.balance) || 0;
-    let newBalance = prevBalance + parseFloat(new_trainer.fee);
+    let newBalance = prevBalance + parseFloat(new_trainer.fee) - parseFloat(new_trainer.discount);
+    let newDiscount = (parseFloat(new_trainer.discount) || 0) + (parseFloat(selectedReceipt.discount) || 0);
     let membershipPayload = {
           id: membershipId,
           gym_id: user.gym_id,
@@ -757,9 +760,12 @@ export function useReceiptManager({
           trainer_assigned_on: new_trainer.start_date,
           trainer_expiry: newTrainerExpiry,
           trainer_fee: new_trainer.fee,
+          discount: newDiscount,
           total_amount: newTotalAmount,
           balance: newBalance
     }
+    console.log('Membership Payload for Trainer Assignment Renewal:', membershipPayload);
+    //return
     let response = isWeb ? await receiptService.renewTrainerAssignment(membershipId,membershipPayload, user.gym_id) : await receiptService.renewTrainerAssignmentSQLite(membershipId,membershipPayload, user.gym_id);
     if(response.error){
           await confirm(
@@ -837,6 +843,7 @@ export function useReceiptManager({
        resourceServices.openExternalLink(whatsappLink);
     }
   }
+
   useEffect(() => {
     if(!isReady) return;
     fetchReceipts();

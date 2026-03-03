@@ -1,77 +1,66 @@
 
 export const mig = {
-    version: 10,
+    version: 14,
     migrate: [
-`DROP VIEW receipt_view_local;`,
-`CREATE VIEW receipts_view_local AS
+`drop view  txn_view_local;`,
+`
+CREATE VIEW txn_view_local AS
+WITH txn_total AS(
+        SELECT
+        membership_id,
+        SUM(
+            CASE
+                WHEN deleted = 0
+                AND txn_type IN ('admission','renewal','payment')
+                THEN amount
+
+                WHEN deleted = 0
+                AND txn_type = 'refund'
+                THEN -ABS(amount)
+
+                ELSE 0
+             END
+
+        ) AS total_paid
+    FROM transactions_local
+    GROUP BY membership_id
+)
 SELECT
-  m.id                AS membership_id,
-  m.gym_id,
-  m.branch_id,
-  m.member_id,
-  m.status,
-  m.package_id,
-  m.trainer_id,
-  m.start_date,
-  m.due_date,
-  m.cancellation_date,
-  m.trainer_start,
-  m.trainer_expiry,
-  m.receipt_date,
-  m.total_amount,
-  m.discount,
-  m.amount_paid,
-  m.balance,
-  m.admission_fee,
-  m.package_fee,
-  m.created_at,
-  m.updated_at,
-
-  /* -------------------------------
-     Transaction history as JSON
-  --------------------------------*/
-  COALESCE(
-  json_group_array(
-    CASE
-      WHEN t.id IS NOT NULL THEN
-        json_object(
-          'transaction_id', t.id,
-          'txn_type', t.txn_type,
-          'amount', t.amount,
-          'payment_method', t.payment_method,
-          'status', t.status,
-          'txn_date', t.txn_date
-        )
-    END
-  ),
-  '[]'
-) AS transaction_history
-
-
-  /* -------------------------------
-     Total paid via transactions
-  --------------------------------*/
-  COALESCE(
-    SUM(
-      CASE
-        WHEN t.deleted = 0 THEN t.amount
-        ELSE 0
-      END
-    ),
+        m.serial_number,
+        m.id,
+        m.gym_id,
+        m.branch_id,
+        m.name,
+        m.admission_date,
+        ms.due_date,
+        ms.cancellation_date,
+        ms.start_date,
+        (ms.total_amount - IFNULL(ms.discount, 0)) AS total_payable_after_discount,
+        tnt.total_paid,
+        MAX(
+    ((ms.total_amount - IFNULL(ms.discount, 0)) - IFNULL(tnt.total_paid, 0)),
     0
-  ) AS total_paid_via_transactions
-
-FROM memberships_local m
-LEFT JOIN transactions_local t
-  ON t.membership_id = m.id
- AND t.deleted = 0
-
-WHERE m.deleted = 0
-GROUP BY m.id
-ORDER BY m.receipt_date desc;`,
-`DROP VIEW IF EXISTS member_view_local;`,
-// Updated member_view_local with accurate balance calculation
-`CREATE VIEW member_view_local AS
+) AS balance,
+        ms.id as membership_id,
+        t.id as transaction_id,
+        t.amount,
+        t.txn_date,
+        t.txn_type,
+        t.payment_method,
+        p.id as package_id,
+        s.id as trainer_id,
+        p.name as package_name,
+        s.name as trainer_name
+from members_local m
+left join transactions_local t on t.member_id = m.id
+left join memberships_local ms on ms.id = t.membership_id and ms.member_id = m.id
+left join txn_total tnt on tnt.membership_id = ms.id
+left join packages_local p on p.id = ms.package_id
+left join staff_local s on s.id = ms.trainer_id;
+`,
+`DROP VIEW member_view_local;`,
+`
+CREATE VIEW member_view_local AS
 WITH latest_membership AS (
     SELECT *
     FROM (
@@ -207,8 +196,8 @@ member_total_balance AS (
         SUM(
             CASE
                 WHEN ms.status = 'cancelled' THEN 0
-                ELSE (ms.total_amount - IFNULL(ms.discount, 0))
-                     - COALESCE(tp.amount_paid, 0)
+                ELSE MAX((ms.total_amount - IFNULL(ms.discount, 0))
+                     - COALESCE(tp.amount_paid, 0),0)
             END
         ) AS member_balance
     FROM memberships_local ms
@@ -310,73 +299,9 @@ LEFT JOIN member_total_balance mtb
 
 WHERE m.deleted = 0
 GROUP BY m.id;`,
-`DROP VIEW IF EXISTS receipts_view_local;`,
-`CREATE VIEW receipts_view_local AS
-SELECT
-  m.id                AS membership_id,
-  m.gym_id,
-  m.branch_id,
-  m.member_id,
-  m.status,
-  m.package_id,
-  m.trainer_id,
-  m.start_date,
-  m.due_date,
-  m.cancellation_date,
-  m.trainer_start,
-  m.trainer_expiry,
-  m.receipt_date,
-  m.total_amount,
-  m.discount,
-  m.amount_paid,
-  m.balance,
-  m.admission_fee,
-  m.package_fee,
-  m.created_at,
-  m.updated_at,
-
-  /* -------------------------------
-     Transaction history as JSON
-  --------------------------------*/
-  COALESCE(
-    json_group_array(
-      json_object(
-        'transaction_id', t.id,
-        'txn_type', t.txn_type,
-        'amount', t.amount,
-        'payment_method', t.payment_method,
-        'status', t.status,
-        'txn_date', t.txn_date
-      )
-    ),
-    '[]'
-  ) AS transaction_history,
-
-  /* -------------------------------
-     Total paid via transactions
-  --------------------------------*/
-  COALESCE(
-    SUM(
-      CASE
-        WHEN t.deleted = 0 THEN t.amount
-        ELSE 0
-      END
-    ),
-    0
-  ) AS total_paid_via_transactions
-
-FROM memberships_local m
-LEFT JOIN transactions_local t
-  ON t.membership_id = m.id
- AND t.deleted = 0
-
-WHERE m.deleted = 0
-GROUP BY m.id
-ORDER BY m.receipt_date desc;`,
-
-`DROP VIEW IF EXISTS attendance_view_local;`,
-
-`CREATE VIEW attendance_view_local AS
+`DROP VIEW attendance_view_local;`,
+`
+CREATE VIEW attendance_view_local AS
 WITH txn_paid AS (
     SELECT
         ms.member_id,
@@ -438,7 +363,7 @@ SELECT
     COALESCE(tp.amount_paid_total, 0) AS amount_paid,
 
     /* ✔ Accurate cumulative balance across ALL memberships */
-    COALESCE(ab.final_balance, 0) AS balance,
+    MAX(COALESCE(ab.final_balance, 0),0) AS balance,
 
     m.discount,
     m.receipt_date,
@@ -453,310 +378,6 @@ LEFT JOIN txn_paid tp
     ON tp.member_id = m.id
 
 LEFT JOIN accurate_balance ab
-    ON ab.member_id = m.id;
-
-DROP VIEW IF EXISTS txn_view_local;
-
-CREATE VIEW txn_view_local AS
-WITH txn_total AS(
-        SELECT
-        membership_id,
-        SUM(
-            CASE
-                WHEN deleted = 0
-                AND txn_type IN ('admission','renewal','payment')
-                THEN amount
-
-                WHEN deleted = 0
-                AND txn_type = 'refund'
-                THEN -ABS(amount)
-
-                ELSE 0
-             END
-
-        ) AS total_paid
-    FROM transactions_local
-    GROUP BY membership_id
-)
-SELECT
-        m.serial_number,
-        m.id,
-        m.gym_id,
-        m.branch_id,
-        m.name,
-        m.admission_date,
-        ms.due_date,
-        ms.cancellation_date,
-        ms.start_date,
-        (ms.total_amount - IFNULL(ms.discount, 0)) AS total_payable_after_discount,
-        tnt.total_paid,
-        (ms.total_amount - IFNULL(tnt.total_paid, 0)) AS balance,
-        ms.id as membership_id,
-        t.id as transaction_id,
-        t.amount,
-        t.txn_date,
-        t.txn_type,
-        t.payment_method,
-        p.id as package_id,
-        s.id as trainer_id,
-        p.name as package_name,
-        s.name as trainer_name
-from members_local m
-left join transactions_local t on t.member_id = m.id
-left join memberships_local ms on ms.id = t.membership_id and ms.member_id = m.id
-left join txn_total tnt on tnt.membership_id = ms.id
-left join packages_local p on p.id = ms.package_id
-left join staff_local s on s.id = ms.trainer_id;`,
-'DROP VIEW IF EXISTS gym_dashboard_view;',
-`CREATE VIEW gym_dashboard_view AS
-WITH
-/* ---------------------------------------------------------
-   1. Latest membership per member (same as before)
-----------------------------------------------------------*/
-latest_membership AS (
-    SELECT *
-    FROM (
-        SELECT
-            ms.*,
-            ROW_NUMBER() OVER (
-                PARTITION BY ms.member_id
-                ORDER BY date(ms.receipt_date) DESC
-            ) AS rn
-        FROM memberships_local ms
-        WHERE ms.deleted = 0
-    )
-    WHERE rn = 1
-),
-
-/* ---------------------------------------------------------
-   2. TRUE ACCURATE BALANCE (membership-level)
-----------------------------------------------------------*/
-accurate_balance_per_membership AS (
-    SELECT
-        ms.id AS membership_id,
-        ms.member_id,
-        ms.gym_id,
-        ms.branch_id,
-
-        (ms.total_amount - IFNULL(ms.discount, 0)) AS total_payable,
-
-        ms.amount_paid AS amount_paid,
-
-        (ms.total_amount - IFNULL(ms.discount, 0)) - ms.amount_paid
-            AS accurate_balance,
-
-        ms.receipt_date
-    FROM memberships_local ms
-    WHERE ms.deleted = 0
-),
-
-/* ---------------------------------------------------------
-   3. Member metrics based on latest membership
-----------------------------------------------------------*/
-member_metrics AS (
-    SELECT
-        m.gym_id,
-        m.branch_id,
-        m.id AS member_id,
-        lm.status,
-        lm.due_date,
-        lm.cancellation_date,
-        m.dob,
-        lm.receipt_date
-    FROM members_local m
-    LEFT JOIN latest_membership lm ON lm.member_id = m.id
-    WHERE m.deleted = 0
-),
-
-/* ---------------------------------------------------------
-   4. Branch-level aggregation
-----------------------------------------------------------*/
-branch_agg AS (
-    SELECT
-        gym_id,
-        branch_id,
-
-        COUNT(member_id) AS total_members,
-
-        SUM(CASE WHEN status='active' AND date(due_date) > date('now')
-                 THEN 1 ELSE 0 END) AS active_members,
-
-        SUM(CASE WHEN status='active' AND date(due_date)<=date('now')
-                 AND (cancellation_date IS NULL OR date(cancellation_date)>date('now'))
-                 THEN 1 ELSE 0 END) AS inactive_members,
-
-        SUM(CASE WHEN cancellation_date IS NOT NULL
-                 AND date(cancellation_date)<=date('now')
-                 THEN 1 ELSE 0 END) AS cancelled_members,
-
-        SUM(CASE WHEN strftime('%m-%d', dob)=strftime('%m-%d','now')
-                 THEN 1 ELSE 0 END) AS birthdays_today,
-
-        SUM(CASE WHEN date(due_date)=date('now') THEN 1 ELSE 0 END) AS due_today,
-        SUM(CASE WHEN date(due_date)=date('now','+1 day') THEN 1 ELSE 0 END) AS due_tomorrow,
-
-        SUM(CASE WHEN cancellation_date IS NOT NULL
-                 AND date(cancellation_date)=date('now')
-                 THEN 1 ELSE 0 END) AS cancelled_today,
-
-        SUM(CASE WHEN cancellation_date IS NOT NULL
-                 AND date(cancellation_date)=date('now','+1 day')
-                 THEN 1 ELSE 0 END) AS cancelled_tomorrow
-    FROM member_metrics
-    GROUP BY gym_id, branch_id
-),
-
-/* ---------------------------------------------------------
-   5. Accurate monthly balance per branch
-----------------------------------------------------------*/
-monthly_balance AS (
-    SELECT
-        gym_id,
-        branch_id,
-        SUM(accurate_balance) AS balance_month
-    FROM accurate_balance_per_membership
-    WHERE accurate_balance > 0
-      AND receipt_date IS NOT NULL
-      AND strftime('%Y-%m', receipt_date)=strftime('%Y-%m', 'now')
-    GROUP BY gym_id, branch_id
-),
-
-/* ---------------------------------------------------------
-   6. Transaction metrics (same as before)
-----------------------------------------------------------*/
-txn_agg AS (
-    SELECT
-        gym_id,
-        branch_id,
-
-        SUM(CASE WHEN txn_type IN ('admission','renewal','payment')
-                     AND strftime('%Y-%m', txn_date)=strftime('%Y-%m','now')
-                 THEN amount ELSE 0 END) AS collection_month,
-
-        SUM(CASE WHEN txn_type='refund'
-                 AND strftime('%Y-%m', txn_date)=strftime('%Y-%m','now')
-                THEN amount ELSE 0 END) AS refund_month,
-
-        SUM(CASE WHEN txn_type='admission'
-                     AND strftime('%Y-%m', txn_date)=strftime('%Y-%m','now')
-                 THEN 1 ELSE 0 END) AS admissions_month,
-
-        SUM(CASE WHEN txn_type='renewal'
-                     AND strftime('%Y-%m', txn_date)=strftime('%Y-%m','now')
-                 THEN 1 ELSE 0 END) AS renewals_month,
-
-        SUM(CASE WHEN txn_type='admission' AND date(txn_date)=date('now')
-                 THEN 1 ELSE 0 END) AS admissions_today,
-
-        SUM(CASE WHEN txn_type='renewal' AND date(txn_date)=date('now')
-                 THEN 1 ELSE 0 END) AS renewals_today,
-
-        SUM(CASE WHEN txn_type IN ('admission','renewal','payment')
-                     AND date(txn_date)=date('now')
-                 THEN amount ELSE 0 END) AS collection_today
-
-    FROM transactions_local
-    WHERE deleted = 0
-    GROUP BY gym_id, branch_id
-),
-
-/* ---------------------------------------------------------
-   7. Monthly expenses
-----------------------------------------------------------*/
-expense_agg AS (
-    SELECT
-        gym_id,
-        branch_id,
-        SUM(amount) AS expenses_month
-    FROM expenses_local
-    WHERE deleted = 0
-      AND strftime('%Y-%m', txn_date)=strftime('%Y-%m','now')
-    GROUP BY gym_id, branch_id
-),
-
-/* ---------------------------------------------------------
-   8. Final branch-wise rows
-----------------------------------------------------------*/
-branch_rows AS (
-    SELECT
-        g.id AS gym_id,
-        bl.id AS branch_id,
-
-        COALESCE(ba.total_members, 0) AS total_members,
-        COALESCE(ba.active_members, 0) AS active_members,
-        COALESCE(ba.inactive_members, 0) AS inactive_members,
-        COALESCE(ba.cancelled_members, 0) AS cancelled_members,
-        COALESCE(ba.birthdays_today, 0) AS birthdays_today,
-
-        COALESCE(tx.collection_month, 0) AS collection_month,
-        COALESCE(tx.refund_month, 0) AS refund_month,
-        COALESCE(tx.admissions_month, 0) AS admissions_month,
-        COALESCE(tx.renewals_month, 0) AS renewals_month,
-        COALESCE(tx.admissions_today, 0) AS admissions_today,
-        COALESCE(tx.renewals_today, 0) AS renewals_today,
-        COALESCE(tx.collection_today, 0) AS collection_today,
-
-        COALESCE(exp.expenses_month, 0) AS expenses_month,
-
-        COALESCE(ba.due_today, 0) AS due_today,
-        COALESCE(ba.due_tomorrow, 0) AS due_tomorrow,
-        COALESCE(ba.cancelled_today, 0) AS cancelled_today,
-        COALESCE(ba.cancelled_tomorrow, 0) AS cancelled_tomorrow,
-
-        COALESCE(mb.balance_month, 0) AS balance_month
-
-    FROM gyms_local g
-    JOIN branches_local bl
-        ON bl.gym_id = g.id AND bl.deleted = 0
-    LEFT JOIN branch_agg ba
-        ON ba.gym_id = g.id AND ba.branch_id = bl.id
-    LEFT JOIN txn_agg tx
-        ON tx.gym_id = g.id AND tx.branch_id = bl.id
-    LEFT JOIN expense_agg exp
-        ON exp.gym_id = g.id AND exp.branch_id = bl.id
-    LEFT JOIN monthly_balance mb
-        ON mb.gym_id = g.id AND mb.branch_id = bl.id
-),
-
-/* ---------------------------------------------------------
-   9. Gym-level totals
-----------------------------------------------------------*/
-gym_rows AS (
-    SELECT
-        gym_id,
-        NULL AS branch_id,
-
-        SUM(total_members) AS total_members,
-        SUM(active_members) AS active_members,
-        SUM(inactive_members) AS inactive_members,
-        SUM(cancelled_members) AS cancelled_members,
-        SUM(birthdays_today) AS birthdays_today,
-
-        SUM(collection_month) AS collection_month,
-        SUM(refund_month) AS refund_month,
-        SUM(admissions_month) AS admissions_month,
-        SUM(renewals_month) AS renewals_month,
-        SUM(admissions_today) AS admissions_today,
-        SUM(renewals_today) AS renewals_today,
-        SUM(collection_today) AS collection_today,
-
-        SUM(expenses_month) AS expenses_month,
-
-        SUM(due_today) AS due_today,
-        SUM(due_tomorrow) AS due_tomorrow,
-        SUM(cancelled_today) AS cancelled_today,
-        SUM(cancelled_tomorrow) AS cancelled_tomorrow,
-
-        SUM(balance_month) AS balance_month
-    FROM branch_rows
-    GROUP BY gym_id
-)
-
-/* ---------------------------------------------------------
-   10. Final Output
-----------------------------------------------------------*/
-SELECT * FROM gym_rows
-UNION ALL
-SELECT * FROM branch_rows;`
-]
+    ON ab.member_id = m.id;`
+    ]
 }

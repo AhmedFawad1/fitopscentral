@@ -35,7 +35,7 @@ export const sessionServices = {
             user_id: user.id
             });
             if(data.expired){
-                setLicenseError("Your license has expired. Please contact support.");
+                return {...user, expired: true};
             }
             if(isTauri){
                 localStorage.setItem('supabaseUser', JSON.stringify({...user, ...data}));

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export function useRuntime() {
+  const web = process.env.NEXT_PUBLIC_WEB;
   const [runtime, setRuntime] = useState("unknown");
 
   useEffect(() => {
@@ -18,5 +19,6 @@ export function useRuntime() {
     isTauri: runtime === "tauri",
     isWeb: runtime === "web",
     isReady: runtime !== "unknown",
+    web
   };
 }

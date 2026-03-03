@@ -77,7 +77,7 @@ export default function AttendanceUI({
         )}
       </div>
       {
-        membersDetails && (
+        membersDetails && attendanceType === 'Members' ? (
             <div className="p-2 bg-[var(--color-card)] rounded-md flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
                 <div>Total Members: <span className="font-semibold text-[var(--color-text)]">{membersDetails.total || 0}</span></div>
                 <div>Active: <span className="font-semibold text-green-500">{membersDetails.active || 0}</span></div>
@@ -96,7 +96,19 @@ export default function AttendanceUI({
                 <BrushCleaning className='h-4 w-5 text-[var(--color-text)]' />
                 </button>
             </div>
-        )
+        ):
+        <div className="bg-[var(--color-card)] rounded-md flex flex-wrap gap-4 text-sm text-[var(--color-text-muted)]">
+              <button onClick={() => {
+              setSearchInput('');
+              setSelectedDate('');
+              setSubFilter('All');
+              setAttendanceType('Staff');
+              setAttendanceData(null);
+              }}
+              >
+              <BrushCleaning className='h-4 w-5 text-[var(--color-text)]' />
+              </button>
+          </div>
         }
       {/* Table stays here — logic already removed 💅 */}
         <div className="relative border mt-2 border-gray-200 rounded-md overflow-x-hidden overflow-y-auto max-h-110">
@@ -151,7 +163,7 @@ export default function AttendanceUI({
                     >
                     <td className="px-4 py-2 whitespace-nowrap text-[10pt] ">{e.serial_number}</td>
                     <td className="px-4 py-2 whitespace-nowrap text-[10pt] ">{e.name}</td>
-                    <td className={`whitespace-nowrap text-[10pt] text-center ${e.status === 'active' ? 'bg-green-500' : e.status === 'inactive' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>{e.status ? makeFirstLetterUppercase(e.status) : ''}</td>
+                    {/* <td className={`whitespace-nowrap text-[10pt] text-center ${e.status === 'active' ? 'bg-green-500' : e.status === 'inactive' ? 'bg-red-500 text-white' : 'bg-amber-500 text-white'}`}>{e.status ? makeFirstLetterUppercase(e.status) : ''}</td> */}
                     <td className="px-4 py-2 whitespace-nowrap text-[10pt] ">{e.date ? formatDate(e.date) : ''}</td>
                     <td className="px-4 py-2 whitespace-nowrap text-[10pt] ">{e.calculated_salary ? calculateSalary(e.hourly_rate, calculateHoursWorked(e.check_in_time, e.check_out_time)).toFixed(2) : '0/-'}</td>
                     <td className="px-4 py-2 whitespace-nowrap text-[10pt] ">{e.total_commission ? e.total_commission : '0/-'}</td>

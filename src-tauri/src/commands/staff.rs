@@ -106,17 +106,18 @@ pub async fn upsert_staff(
     let fee = staff.get("fee").and_then(|v| v.as_i64()).unwrap_or(0);
     let staff_type = staff.get("staff_type").and_then(|v| v.as_str()).unwrap_or("regular");
     let nic = staff.get("nic").and_then(|v| v.as_str()).unwrap_or("");
-    let status = staff.get("status").and_then(|v| v.as_str()).unwrap_or("");
+    let status = staff.get("status").and_then(|v| v.as_str()).unwrap_or("active");
     let serial_number = staff.get("serial_number").and_then(|v| v.as_i64()).unwrap_or(0);
     let updated_by = staff.get("updated_by").and_then(|v| v.as_str()).unwrap_or("");
+    let gender = staff.get("gender").and_then(|v| v.as_str()).unwrap_or("other");
     conn.execute(
         "INSERT INTO staff_local (
             id, gym_id, branch_id, user_id, name, contact, address, email, role_title, join_date,
             salary_type, base_salary, hourly_rate, commission_percent, work_start_time, work_end_time,
-            is_active, updated_at, created_at, synced_at, is_dirty, deleted, fee, staff_type, nic, status, serial_number, updated_by
+            is_active, updated_at, created_at, synced_at, is_dirty, deleted, fee, staff_type, nic, status, serial_number, updated_by, gender
         )
         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16,
-                ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28)
+                ?17, ?18, ?19, ?20, ?21, ?22, ?23, ?24, ?25, ?26, ?27, ?28, ?29)
         ON CONFLICT(id) DO UPDATE SET
             gym_id = excluded.gym_id,
             branch_id = excluded.branch_id,
@@ -144,11 +145,12 @@ pub async fn upsert_staff(
             nic = excluded.nic,
             status = excluded.status,
             serial_number = excluded.serial_number,
-            updated_by = excluded.updated_by;",
+            updated_by = excluded.updated_by,
+            gender = excluded.gender;",
         params![
             id, gym_id, branch_id, user_id, name, contact, address, email, role_title, join_date,
             salary_type, base_salary, hourly_rate, commission_percent, work_start_time, work_end_time,
-            is_active, updated_at, created_at, synced_at, is_dirty, deleted, fee, staff_type, nic, status, serial_number, updated_by
+            is_active, updated_at, created_at, synced_at, is_dirty, deleted, fee, staff_type, nic, status, serial_number, updated_by, gender
         ],
     )
     .map_err(|e| format!("❌ Failed to upsert staff: {}", e))?;

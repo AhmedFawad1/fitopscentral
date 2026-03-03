@@ -7,10 +7,13 @@ import { setLocalUpdate, setSuccessModal } from '@/store/authSlice';
 import { genUUID } from '../uuid';
 import SalesUI from './SalesUI';
 import { useSalesManager } from './useSalesManager';
+import { resourceServices } from '../../resourceServices';
 
 
 
-export default function SalesContainer() {
+export default function SalesContainer({
+    setAttendanceCard
+}) {
     const user = useSelector((state) => state.auth.user);
     const branches = useSelector((state) => state.auth.user.all_branches_json || []);
     const gymId = useSelector((state) => state.auth.user?.gym_id);
@@ -28,6 +31,17 @@ export default function SalesContainer() {
     return(
         <SalesUI 
             {...login}
+            onSelectCustomer={async (customer)=>{
+               let data = await resourceServices.getProfile(gymId, branchId, customer.serial_number);
+               
+               if(typeof data.membership_history === 'string'){
+                    data.membership_history = JSON.parse(data.membership_history);
+               }
+               setAttendanceCard({
+                   ...data,
+                   type: 'member'
+               })
+            }}
         />
     )
 }

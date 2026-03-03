@@ -96,14 +96,22 @@ export async function getTemplates(gym_id, branch_id) {
 /* ---------------- MESSAGE HELPERS ---------------- */
 
 export const replaceTags = (text, member) => {
+  if(!member.total_amount){
+    member.total_amount = member.amount_paid + member.balance - member.discount;
+  }
   text = text
     .replace('{Name}', member.name || '')
     .replace('{contact}', member.contact || '')
     .replace('{Father Name}', member.father_name || '')
     .replace('{Receipt Date}', parseDate(member.receipt_date))
+    .replace('{Admission Date}', parseDate(member.admission_date))
+    .replace('{Amount Paid}', member.amount_paid || 0)
+    .replace('{Discount}', member.discount || 0)
     .replace('{Start Date}', parseDate(member.start_date))
+    .replace('{Total Amount}', member.total_amount || 0)
     .replace('{Due Date}', parseDate(member.due_date))
     .replace('{Cancellation Date}', parseDate(member.cancellation_date))
+    .replace('{Gym ID}', member.serial_number || '')
     .replace('{Trainer}', parseText(member.trainer_name))
     .replace('{Package}', parseText(member.package_name))
     .replace('{Balance}', member.balance || 0);

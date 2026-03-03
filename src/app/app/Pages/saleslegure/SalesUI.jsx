@@ -19,7 +19,8 @@ export default function SalesUI({
   searchFilter,
   financialSummary,
   showDetails,
-  modifiedView
+  modifiedView,
+  onSelectCustomer
 }) {
   const props = {
     searchFilter, 
@@ -151,7 +152,7 @@ export default function SalesUI({
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              <TableView {...props} />
+              <TableView {...props} onSelectCustomer={onSelectCustomer} />
             </motion.div>
           ) : (
             <motion.div
@@ -162,7 +163,7 @@ export default function SalesUI({
               transition={{ duration: 0.35, ease: 'easeOut' }}
               className='overflow-x-hidden'
             >
-              <TableView {...props} />
+              <TableView {...props} onSelectCustomer={onSelectCustomer} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -176,7 +177,8 @@ function TableView({
   financialSummary,
   showDetails,
   modifiedView,
-  formValues
+  formValues,
+  onSelectCustomer
 }) {
   return (
     <>
@@ -192,7 +194,6 @@ function TableView({
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
           <div
-            
             className= {`flex max-h-[250px] overflow-y-auto border ${searchFilter.length !==0 ?'border-slate-400':'border-transparent'}` }
             >
               <table className='w-full table-auto border-collapse border border-slate-400'>
@@ -202,6 +203,9 @@ function TableView({
                           <th className='border border-slate-300 px-2 py-1'>Name</th>
                           <th className='border border-slate-300 px-2 py-1'>Txn Type</th>
                           <th className='border border-slate-300 px-2 py-1'>Txn Date</th>
+                          { modifiedView &&
+                            <th className='border border-slate-300 px-2 py-1'>Payment Method</th>
+                          }
                           <th className='border border-slate-300 px-2 py-1'>Admission</th>
                           <th className='border border-slate-300 px-2 py-1'>Due Date</th>
                           <th className='border border-slate-300 px-2 py-1'>Package</th>
@@ -223,6 +227,7 @@ function TableView({
                                   onClick={() => {
                                       // dispatch(setUpsertAttendance(false));
                                       // dispatch(setAttendanceID(record.serial_number));
+                                      onSelectCustomer(record);
                                       onFieldChange('upsertAttendance', false);
                                       onFieldChange('attendanceID', record.serial_number);
                                     }}
@@ -231,6 +236,9 @@ function TableView({
                                   <td className='border border-slate-300 px-2 py-1'>{record.name}</td>
                                   <td className='border border-slate-300 px-2 py-1'>{makeFirstLetterUppercase(record.txn_type)}</td>
                                   <td className='border border-slate-300 px-2 py-1'>{formatDate(record.txn_date)}</td>
+                                  {
+                                    modifiedView && <td className='border border-slate-300 px-2 py-1'>{makeFirstLetterUppercase(record.payment_method)}</td>
+                                  }
                                   <td className='border border-slate-300 px-2 py-1'>{formatDate(record.admission_date)}</td>
                                   <td className='border border-slate-300 px-2 py-1'>{formatDate(record.due_date)}</td>
                                   <td className='border border-slate-300 px-2 py-1'>{record.package_name}</td>
@@ -325,6 +333,6 @@ function TableView({
     </>
   )
 }
-const formatNumber = (num) => {
+export const formatNumber = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

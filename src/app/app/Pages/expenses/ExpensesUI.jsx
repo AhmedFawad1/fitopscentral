@@ -4,6 +4,7 @@ import InputField from "../../AppComponents/subcomponents/InputField";
 import CheckBox from "../../AppComponents/subcomponents/CheckBox";
 import { motion } from "framer-motion";
 import { payment_methods } from "@/app/lib/functions";
+import { formatNumber } from "../saleslegure/SalesUI";
 
 export default function ExpensesUI({
   user,
@@ -88,7 +89,7 @@ export default function ExpensesUI({
         <div className='my-5'>
           {
               safeExpenses.length > 0 ? (
-                  <table className='w-full max-h-400 table-auto border-collapse border border-slate-400'>
+                  <table className='w-full max-h-[350px] table-auto border-collapse border border-slate-400'>
                       <thead className='sticky top-0  bg-[var(--logo-primary)] overflow-hidden'>
                           <tr>
                               {user.branch_id ? null : <th className='border border-slate-300 px-2 py-1'>Branch</th>}
@@ -127,7 +128,7 @@ export default function ExpensesUI({
                 <span className='font-bold'>Total Expenses: </span>
                   <span className='text-red-600 font-bold'>
                       {
-                        getTotalExpenses(expenses)
+                        formatNumber(getTotalExpenses(safeExpenses))
                       }
                   </span>
               </div>

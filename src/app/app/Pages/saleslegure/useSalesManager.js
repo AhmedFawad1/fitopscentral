@@ -66,6 +66,8 @@ export function useSalesManager({
         let cleanData = [];
         (data || []).forEach(record => {
           totalAmount += record.txn_type!=='refund' ? parseFloat(record.amount) || 0 : 0;
+          let paymentMethod = record.payment_method ? record.payment_method.toLowerCase() : '';
+         
           if(!countedIds.includes(record.id)){
             countedIds.push(record.id);
             totalBalance += parseFloat(record.balance) || 0;
@@ -78,11 +80,11 @@ export function useSalesManager({
           if(record.txn_type.toLowerCase() === 'refund'){
             refund += parseFloat(record.amount) || 0;
           }
-          if(payment_methods.map(pm => pm.toLowerCase()).includes(record.payment_method?.toLowerCase())){
-            online += record.txn_type!=='refund' ? parseFloat(record.amount) || 0 : 0;
+          if(paymentMethod === 'cash'){
+            cash += parseFloat(record.amount) || 0;
           }
           else{
-            cash += record.txn_type!=='refund' ? parseFloat(record.amount) || 0 : 0;
+            online += parseFloat(record.amount) || 0;
           }
         });
         setSearchFilter(cleanData);

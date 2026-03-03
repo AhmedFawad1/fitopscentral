@@ -82,6 +82,10 @@ export function useBroadcastManager({ onClose }) {
                 )
             );
             break;
+        case 'filteredMembers':
+            console.log('Updating filteredMembers:', value);
+            setFilteredMembers(value);
+            break;
         default:
             console.warn(`Unhandled field: ${field}`);
             break;
@@ -116,7 +120,12 @@ export function useBroadcastManager({ onClose }) {
         );
 
         // process
-        if (!member.BLOCKED && member.contact?.length > 5) {
+        let donotSend = member.BLOCKED === 1 || member.BLOCKED === true || !member.contact || member.contact.length <= 5;
+        if (donotSend) {
+          errorMessage = member.BLOCKED === 1 || member.BLOCKED === true ? "Blocked" : "Invalid contact";
+        }
+        //return
+        if (!donotSend) {
           let contact = validatePhoneNumber(member.contact) || '';
           //return
           try {
@@ -215,6 +224,7 @@ export function useBroadcastManager({ onClose }) {
   /* ---------------- AUDIENCE FILTER ---------------- */
   useEffect(() => {
     const query = buildAudienceQuery(selectedAudience, gymid);
+    
     if (!query) return setFilteredMembers([]);
 
     invoke('run_sqlite_query', { query })

@@ -62,6 +62,7 @@ export default function PageContent() {
   const showProgress = useSelector((state) => state.profile.showProgress);
   const showBroadcastMessage = useSelector((state) => state.profile.showBroadcastMessage);
   const [open, setOpen] = useState(false);
+  const [showEnlargedPhoto, setShowEnlargedPhoto] = useState(false);
   const autoClosure = useSelector((state) => state.profile.autoClosure);
  
   const resourcesManager = useResourcesManager({ dispatch, user: user?.gym_id ? user : null, resourceServices });
@@ -116,7 +117,7 @@ export default function PageContent() {
   (
     <ConfirmProvider>
       <SuccessModal />
-      <AttendanceUI setSelectedTab={setSelectedTab} setSelectedCustomer={setSelectedCustomer} attendanceCard={resourcesManager.attendanceCard} setAttendanceCard={resourcesManager.setAttendanceCard} />
+      <AttendanceUI showEnlargedPhoto={showEnlargedPhoto} setShowEnlargedPhoto={setShowEnlargedPhoto} setSelectedTab={setSelectedTab} setSelectedCustomer={setSelectedCustomer} attendanceCard={resourcesManager.attendanceCard} setAttendanceCard={resourcesManager.setAttendanceCard} />
       {
         showBroadcastMessage &&
         <BroadcastContainer onClose={() => dispatch(setShowBroadcastMessage(false))} />
@@ -173,7 +174,7 @@ export default function PageContent() {
                 pageView[0]?.key === 'users-management' ?
                 <UserContainer /> :
                 pageView[0]?.key === 'sales-legure' ?
-                <SalesContainer /> :
+                <SalesContainer setAttendanceCard={resourcesManager.setAttendanceCard} /> :
                 pageView[0]?.key === 'device-logs' ?
                 <DeviceContainer /> :
                 null

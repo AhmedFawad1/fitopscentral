@@ -1,10 +1,11 @@
 import { useRuntime } from "@/hooks/useRuntime";
-import { addAttendanceLog, addEventLog, setAttendanceID, setAutoClosure, setBiometricTemplate, setDeviceStatus, setRealDeviceEvents, setTauriConfig, setUpsertAttendance } from "@/store/profileSlice";
+import { addAttendanceLog, addEventLog, setAttendanceID, setAutoClosure, setBiometricTemplate, setDeviceStatus, setRealDeviceEvents, setSendMessage, setTauriConfig, setUpsertAttendance } from "@/store/profileSlice";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { mig } from "../lib/migrations";
+import { replaceTags } from "./Pages/broadcast/broadcastService";
 export function useResourcesManager({
     dispatch,
     user,
@@ -16,7 +17,7 @@ export function useResourcesManager({
   const mode = useSelector((state) => state.profile.mode);
   const [packages, setPackages] = useState([]);
   const [trainers, setTrainers] = useState([]);
-  const [templates, setTemplates] = useState([]);
+  const [ messageTemplates, setMessageTemplates] = useState(null);
   const { isTauri, isWeb, isReady } = useRuntime();
   const [showEnlargedPhoto, setShowEnlargedPhoto] = useState(false);
   const [customerIn, setCustomerIn] = useState(null);
@@ -216,6 +217,21 @@ export function useResourcesManager({
       }
   }
 
+  async function sendMessage(member){
+      if(member.current_status === 'Inactive'){
+         let template = messageTemplates.find(t => t.name === 'Payment Reminder');
+         if(template){
+            let message = replaceTags(template.content, member) ;
+            dispatch(setSendMessage({ number: member.contact, text: message }));
+         }
+      }else if(member.current_status === 'balance_due'){
+         let template = messageTemplates.find(t => t.name === 'Balance Reminder');
+          if(template){
+              let message = replaceTags(template.content, member) ;
+              dispatch(setSendMessage({ number: member.contact, text: message }));
+          }
+      }
+  }
   async function handleAttendanceEvent(id) {
       ////console.log("Handling Attendance for ID:", id);
       
@@ -224,6 +240,7 @@ export function useResourcesManager({
     
       ////console.log("Fetched Profile Data:", data);
       if(data){
+        
          if(data.type === 'member'){
             data.membership_history = typeof data.membership_history === 'string' ? JSON.parse(data.membership_history) : data.membership_history;  
             let balanceDue = isBalanceDue(data.balance, data.last_transaction_date, config);
@@ -232,8 +249,9 @@ export function useResourcesManager({
             }
             resourceServices.playSound(data.current_status);
             resourceServices.markAttendance(gymId, branchId, data.serial_number, data.current_status);
+            sendMessage(data);
          }else{
-            if(data.is_active){
+            if(true){
                 resourceServices.playSound('Active');
                 resourceServices.openGate(config.useArduino, 'Active');
                 resourceServices.markStaffAttendance(gymId, branchId, data.id);
@@ -252,7 +270,7 @@ export function useResourcesManager({
         let { packages, trainers, templates } = await resourceServices.fetchDataSQLite(gymId, branchId);
         setPackages(packages);
         setTrainers(trainers);
-        setTemplates(templates);
+        setMessageTemplates(templates);
         await resourceServices.alterChanges(mig.migrate, mig.version)
     }
     if(!user || isWeb ) return;
@@ -261,12 +279,12 @@ export function useResourcesManager({
   },[user]);
 
   useEffect(() => {
-    if(!isReady || !isTauri || !user) return;
+    if(!isReady || !isTauri || !user || !messageTemplates) return;
     if (config && !initializedRef.current) {
         initializedRef.current = true;
         ConnectApp();
     }
-  }, [config, isReady, user]);
+  }, [config, isReady, user, messageTemplates]);
 
   useEffect(() => {
     if (config?.biometricapp !== 'SecuGenDemo.exe' || !isReady || !isTauri || !user) return;
@@ -299,7 +317,7 @@ export function useResourcesManager({
     logs,
     packages,
     trainers,
-    templates,
+    templates: messageTemplates,
     attendanceCard,
     setAttendanceCard,
     showEnlargedPhoto,

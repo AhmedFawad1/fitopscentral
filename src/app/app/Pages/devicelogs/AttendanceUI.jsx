@@ -43,7 +43,11 @@ export default function AttendanceUI(
             </button>
             <div className="flex items-center gap-5 border-b border-white/10 pb-4">
                 <div
-                    onClick={()=>{ setShowEnlargedPhoto(true); }}
+                    onClick={()=>{ {
+                        if(attendanceCard?.photo_url){
+                            setShowEnlargedPhoto(true);
+                        }
+                    } }}
                 >
                     <ProfilePicture
                         gender={attendanceCard?.gender}
@@ -56,7 +60,11 @@ export default function AttendanceUI(
                         <EnlargedPhoto 
                             photoUrl={attendanceCard?.photo_url} 
                             onClose={() => {
-                                setTimeout(() => setShowEnlargedPhoto(false), 0);
+                                setTimeout(() => {
+                                    if(attendanceCard?.photo_url){
+                                        setShowEnlargedPhoto(false);
+                                    }
+                                }, 0);
                             }}
 
                         />
@@ -159,18 +167,32 @@ export default function AttendanceUI(
             </button>
             <div className="flex items-center gap-5 border-b border-white/10 pb-4">
                 <div
-                    onClick={()=>{setShowEnlargedPhoto(true)}}
+                    onClick={()=>{
+                        if(attendanceCard?.photo_url){
+                            setShowEnlargedPhoto(true);
+                        }
+                    }}
                 >
                     {
                         showEnlargedPhoto &&
                         <EnlargedPhoto 
-                            photoUrl={profile?.photo_url} 
+                            photoUrl={attendanceCard?.photo_url} 
                             onClose={() => {
-                                setTimeout(() => setShowEnlargedPhoto(false), 0);
+                                setTimeout(() => {
+                                    if(attendanceCard?.photo_url){
+                                        setShowEnlargedPhoto(false);
+                                    }
+                                }, 0);
                             }}
 
                         />
                     }
+                <ProfilePicture
+                        gender={attendanceCard?.gender}
+                        ProfilePictureLink={attendanceCard?.photo_url}
+                        width='30'
+                        height='30'
+                    />
                 </div>
                 <div>
                     <h2 className="text-2xl font-semibold text-[var(--color-primary)]">
@@ -233,7 +255,7 @@ function getCurrentMonthString() {
 function EnlargedPhoto({ photoUrl, onClose }) {
     return (
       <div className="fixed  inset-0 bg-black/70 flex items-center justify-center z-40" onClick={onClose}>
-        <img src={photoUrl} alt="Enlarged Profile" className="max-w-full max-h-full rounded-lg shadow-lg" />
+        <img src={photoUrl ? photoUrl : ''} alt="Enlarged Profile" className="max-w-full max-h-full rounded-lg shadow-lg" />
       </div>
     )
 }
