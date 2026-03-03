@@ -536,7 +536,7 @@ fn main() {
             
             // existing DB setup...
             let db_path = initialize_sqlite_db(&handle)?;
-            println!("SQLite DB Path: {}", db_path.display());
+            //println!("SQLite DB Path: {}", db_path.display());
 
             let conn = Connection::open(&db_path)
                 .map_err(|e| format!("Failed to open SQLite DB: {}", e))?;
