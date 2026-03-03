@@ -1,5 +1,6 @@
-// components/Footer.tsx
 'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import Logo from './Logo'
@@ -7,18 +8,29 @@ import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 
 export default function Footer() {
-  const isWeb = process.env.NEXT_PUBLIC_WEB === "true";
-  const date = new Date();
-  const path = usePathname()
+  const pathname = usePathname()
+
+  // Always treat env as string comparison
+  const isWeb = process.env.NEXT_PUBLIC_WEB === 'true'
+
+  // Avoid hydration mismatch for year
+  const [year, setYear] = useState(2026)
+
+  useEffect(() => {
+    setYear(new Date().getFullYear())
+  }, [])
+
+  if (!isWeb) return null
+
   return (
-    isWeb &&
-    <footer hidden={noNavbarPaths.includes(path)} className="border border-transparent border-t-[var(--border)] bg-background">
+    <footer
+      hidden={noNavbarPaths.includes(pathname)}
+      className="border border-transparent border-t-[var(--border)] bg-background"
+    >
       <div className="max-w-7xl mx-auto px-6 py-20">
 
-        {/* Top Grid */}
         <div className="grid gap-12 md:grid-cols-4">
 
-          {/* Brand */}
           <div>
             <div className="flex items-center gap-2">
               <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center">
@@ -35,7 +47,6 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Product */}
           <div>
             <span className="font-semibold mb-4">Product</span>
             <ul className="space-y-3 text-sm text-muted">
@@ -46,7 +57,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Company */}
           <div>
             <span className="font-semibold mb-4">Company</span>
             <ul className="space-y-3 text-sm text-muted">
@@ -57,23 +67,30 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Contact */}
           <div>
             <span className="font-semibold mb-4">Get in touch</span>
             <ul className="space-y-4 text-sm text-muted">
-              <li className="flex items-center gap-2"><Mail size={16} /> support@fitopscentral.com</li>
-              <li className="flex items-center gap-2"><Phone size={16} /> +92 332 8266209</li>
-              <li className="flex items-center gap-2"><MapPin size={16} /> Karachi, Pakistan</li>
+              <li className="flex items-center gap-2">
+                <Mail size={16} /> support@fitopscentral.com
+              </li>
+              <li className="flex items-center gap-2">
+                <Phone size={16} /> +92 332 8266209
+              </li>
+              <li className="flex items-center gap-2">
+                <MapPin size={16} /> Karachi, Pakistan
+              </li>
             </ul>
           </div>
 
         </div>
 
-        {/* Bottom */}
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {date.getFullYear()} FitOpsCentral. All rights reserved.</p>
+          <p suppressHydrationWarning>
+            © {year} FitOpsCentral. All rights reserved.
+          </p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
+
       </div>
     </footer>
   )
