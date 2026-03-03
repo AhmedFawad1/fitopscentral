@@ -83,7 +83,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© 2026 FitOpsCentral. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
       </div>
