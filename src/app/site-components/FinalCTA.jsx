@@ -47,7 +47,7 @@ export default function FinalCTA() {
           className="mt-12 flex flex-col sm:flex-row gap-4 justify-center"
         >
           <Link
-            href="/signup"
+            href="/app"
             className="inline-flex items-center justify-center gap-2 
                        px-10 py-4 rounded-full 
                        bg-primary text-white font-semibold text-lg
@@ -58,7 +58,7 @@ export default function FinalCTA() {
           </Link>
 
           <Link
-            href="/contact-sales"
+            href="/contact"
             className="inline-flex items-center justify-center 
                        px-10 py-4 rounded-full 
                        border border-[var(--border)] text-foreground 

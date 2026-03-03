@@ -36,7 +36,7 @@ export default function Footer() {
 
           {/* Product */}
           <div>
-            <h4 className="font-semibold mb-4">Product</h4>
+            <span className="font-semibold mb-4">Product</span>
             <ul className="space-y-3 text-sm text-muted">
               <li><Link href="/#features">Features</Link></li>
               <li><Link href="/#pricing">Pricing</Link></li>
@@ -47,18 +47,18 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold mb-4">Company</h4>
+            <span className="font-semibold mb-4">Company</span>
             <ul className="space-y-3 text-sm text-muted">
               <li><Link href="/about">About Us</Link></li>
               <li><Link href="/contact">Contact</Link></li>
-              <li><Link href="/privacy">Privacy Policy</Link></li>
+              <li><Link href="/terms">Privacy Policy</Link></li>
               <li><Link href="/terms">Terms of Service</Link></li>
             </ul>
           </div>
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold mb-4">Get in touch</h4>
+            <span className="font-semibold mb-4">Get in touch</span>
             <ul className="space-y-4 text-sm text-muted">
               <li className="flex items-center gap-2"><Mail size={16} /> support@fitopscentral.com</li>
               <li className="flex items-center gap-2"><Phone size={16} /> +92 332 8266209</li>
@@ -70,7 +70,7 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p>© {new Date().getFullYear()} FitOpsCentral. All rights reserved.</p>
+          <p>© 2026 FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
 
