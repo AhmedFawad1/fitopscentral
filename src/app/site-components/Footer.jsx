@@ -4,31 +4,29 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import Logo from './Logo'
-import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 
 export default function Footer() {
-  const pathname = usePathname()
-
-  // Always treat env as string comparison
   const isWeb = process.env.NEXT_PUBLIC_WEB === 'true'
 
-  // Avoid hydration mismatch for year
-  const [year, setYear] = useState(2026)
+  const [mounted, setMounted] = useState(false)
+  const [hideFooter, setHideFooter] = useState(false)
 
   useEffect(() => {
-    setYear(new Date().getFullYear())
+    setMounted(true)
+    const path = window.location.pathname
+    setHideFooter(noNavbarPaths.includes(path))
   }, [])
 
   if (!isWeb) return null
+  if (!mounted) return null   // prevents hydration mismatch
 
   return (
     <footer
-      hidden={noNavbarPaths.includes(pathname)}
+      hidden={hideFooter}
       className="border border-transparent border-t-[var(--border)] bg-background"
     >
       <div className="max-w-7xl mx-auto px-6 py-20">
-
         <div className="grid gap-12 md:grid-cols-4">
 
           <div>
@@ -85,12 +83,9 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border border-transparent border-t-[var(--border)] text-sm text-muted flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p suppressHydrationWarning>
-            © {year} FitOpsCentral. All rights reserved.
-          </p>
+          <p>© 2026 FitOpsCentral. All rights reserved.</p>
           <p>Built for gyms that want to grow 🚀</p>
         </div>
-
       </div>
     </footer>
   )
