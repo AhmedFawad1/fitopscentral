@@ -110,7 +110,7 @@ export default function HowItWorks() {
             Most gyms are fully set up in under 15 minutes ⏱️
           </p>
           <a
-            href="/signup"
+            href="/app"
             className="inline-block px-8 py-3 rounded-full bg-primary 
                        text-white font-semibold hover:bg-primary-hover transition"
           >

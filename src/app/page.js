@@ -35,15 +35,16 @@ export default function HomePage() {
 
   // ✅ HOOK 2: tauri redirect
   useEffect(() => {
-    if (!web) {
+    
+    if (!web || web === undefined) {
       window.location.href = '/app'
     }
-  }, [isReady, isTauri])
+  }, [isReady, isTauri, web ])
 
   // ✅ NOW safe to return conditionally
-  if (!web) return null
+  if (!web || web === undefined) return null
 
-  return (
+  return ( 
     <main className="bg-[var(--background)]">
       <HashScrollFix />
       <Hero />

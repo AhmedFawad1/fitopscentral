@@ -19,6 +19,7 @@ const navLinks = [
 ]
 const donotShowNavbarPaths = ['/login', '/register', '/app','/forgot-password/','/reset-password/']
 export default function Navbar() {
+  const web = process.env.NEXT_PUBLIC_WEB;
   const [open, setOpen] = useState(false)
   const [theme, setTheme] = useState('light')
   const { isTauri, isWeb, isReady } = useRuntime();
@@ -28,6 +29,7 @@ export default function Navbar() {
   }, [theme])
 
   return (
+    web && 
     <motion.header
       initial={{ y: -30, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
@@ -85,6 +87,7 @@ export default function Navbar() {
         <button
           className="lg:hidden text-foreground"
           onClick={() => setOpen(!open)}
+           aria-label="Toggle Menu"
         >
           {open ? <X size={26} /> : <Menu size={26} />}
         </button>
@@ -113,7 +116,7 @@ export default function Navbar() {
               ))}
 
               <Link
-                href="/login"
+                href="/app"
                 className="mt-2 py-2 border border-[var(--primary)] hover:bg-[var(--primary)] text-center rounded-md bg-primary font-semibold"
               >
                 Login

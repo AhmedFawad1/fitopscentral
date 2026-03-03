@@ -42,7 +42,7 @@ export default function Hero() {
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
-              href="/signup"
+              href="/app"
               className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover transition"
             >
               Get Started Free

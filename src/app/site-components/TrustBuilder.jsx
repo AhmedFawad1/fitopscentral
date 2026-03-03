@@ -179,7 +179,7 @@ export default function TrustBuilder() {
           </p>
 
           <Link
-            href="/signup"
+            href="/app"
             className="inline-block mt-8 px-8 py-3 rounded-full bg-primary text-white font-semibold hover:bg-primary-hover transition"
           >
             Start Now — It’s Free

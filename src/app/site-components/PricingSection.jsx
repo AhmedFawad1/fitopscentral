@@ -150,7 +150,7 @@ export default function PricingSection() {
               </ul>
 
               <Link
-                href="/signup"
+                href="/app"
                 className={`block mt-10 text-center px-6 py-3 rounded-full 
                   font-semibold transition
                   ${plan.highlight

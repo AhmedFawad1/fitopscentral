@@ -7,8 +7,10 @@ import { usePathname } from 'next/navigation'
 import { noNavbarPaths } from '../lib/functions'
 
 export default function Footer() {
+  const web = process.env.NEXT_PUBLIC_WEB;
   const path = usePathname()
   return (
+    web &&
     <footer hidden={noNavbarPaths.includes(path)} className="border border-transparent border-t-[var(--border)] bg-background">
       <div className="max-w-7xl mx-auto px-6 py-20">
 
